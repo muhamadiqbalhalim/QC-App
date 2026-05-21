@@ -58,17 +58,28 @@ export function ThemeProvider({ children }) {
    * - light mode
    * =========================================================
    */
-  const [darkMode, setDarkMode] = useState((false) => {
+  const [darkMode, setDarkMode] = useState(() => {
+
     try {
-      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+
+      const savedTheme =
+        localStorage.getItem(
+          THEME_STORAGE_KEY
+        );
 
       return savedTheme === 'dark';
 
     } catch (error) {
-      console.error('Failed to initialize theme:', error);
+
+      console.error(
+        'Failed to initialize theme:',
+        error
+      );
 
       return false;
+
     }
+
   });
 
   /**
