@@ -13,17 +13,32 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import WisTrainingOG from './pages/WisTrainingOG';
 import WisFormRegistration from './pages/WisFormRegistration';
+import TrainingHistory from './pages/TrainingHistory';
 
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import AppLayout from './layouts/AppLayout';
 
 import { useTheme } from './context/ThemeContext';
+
 import useSession from './hooks/useSession';
 
 export default function App() {
 
-  const { darkMode } = useTheme();
+  /**
+   * =========================================================
+   * THEME
+   * =========================================================
+   */
+
+  const { darkMode } =
+    useTheme();
+
+  /**
+   * =========================================================
+   * SESSION
+   * =========================================================
+   */
 
   const {
     getSession,
@@ -31,28 +46,40 @@ export default function App() {
   } = useSession();
 
   /**
-   * Current session user
+   * =========================================================
+   * USER
+   * =========================================================
    */
-  const [user, setUser] = useState(() =>
-    getSession()
-  );
+
+  const [user, setUser] =
+    useState(() =>
+      getSession()
+    );
 
   /**
-   * Sync session after refresh
+   * =========================================================
+   * SYNC SESSION
+   * =========================================================
    */
+
   useEffect(() => {
-    const session = getSession();
+
+    const session =
+      getSession();
 
     if (session) {
+
       setUser(session);
+
     }
+
   }, [getSession]);
 
   return (
     <div
       className={`
-        min-h-screen
-        w-screen
+        min-h-dvh
+        w-full
         overflow-hidden
         transition-colors
         duration-300
@@ -63,10 +90,13 @@ export default function App() {
         }
       `}
     >
-      {/* ============================================== */}
-      {/* PUBLIC ROUTES */}
-      {/* ============================================== */}
+
+      {/* =====================================================
+          PUBLIC ROUTES
+      ===================================================== */}
+
       {!isAuthenticated() ? (
+
         <Routes>
 
           {/* LOGIN */}
@@ -74,7 +104,9 @@ export default function App() {
             path="/"
             element={
               <Login
-                onLoginSuccess={setUser}
+                onLoginSuccess={
+                  setUser
+                }
               />
             }
           />
@@ -89,11 +121,15 @@ export default function App() {
               />
             }
           />
+
         </Routes>
+
       ) : (
-        /* ============================================ */
-        /* AUTHENTICATED ROUTES */
-        /* ============================================ */
+
+        /* ===================================================
+            AUTHENTICATED ROUTES
+        =================================================== */
+
         <Routes>
 
           {/* DASHBOARD */}
@@ -101,11 +137,31 @@ export default function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
+
                 <AppLayout>
+
                   <Dashboard
                     user={user}
                   />
+
                 </AppLayout>
+
+              </ProtectedRoute>
+            }
+          />
+
+          {/* TRAINING HISTORY */}
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+
+                <AppLayout>
+
+                  <TrainingHistory />
+
+                </AppLayout>
+
               </ProtectedRoute>
             }
           />
@@ -115,9 +171,13 @@ export default function App() {
             path="/training-og"
             element={
               <ProtectedRoute>
+
                 <AppLayout>
+
                   <WisTrainingOG />
+
                 </AppLayout>
+
               </ProtectedRoute>
             }
           />
@@ -127,9 +187,13 @@ export default function App() {
             path="/registration/:trainingId"
             element={
               <ProtectedRoute>
+
                 <AppLayout>
+
                   <WisFormRegistration />
+
                 </AppLayout>
+
               </ProtectedRoute>
             }
           />
@@ -155,8 +219,11 @@ export default function App() {
               />
             }
           />
+
         </Routes>
+
       )}
+
     </div>
   );
 }
