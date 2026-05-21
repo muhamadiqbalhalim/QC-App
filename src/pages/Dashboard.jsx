@@ -17,7 +17,6 @@ import {
   Moon,
   AlertTriangle,
   ArrowUpRight,
-  CalendarDays,
   CheckCircle2,
   ClipboardCheck,
   Activity,
@@ -81,8 +80,10 @@ export default function Dashboard({
   const [progressData, setProgressData] =
     useState([]);
 
-  const [executivePendingApprovals, setExecutivePendingApprovals] =
-    useState([]);
+  const [
+    executivePendingApprovals,
+    setExecutivePendingApprovals,
+  ] = useState([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -143,7 +144,7 @@ export default function Dashboard({
 
   /**
    * =========================================================
-   * FETCH USER PROGRESS
+   * FETCH DASHBOARD DATA
    * =========================================================
    */
 
@@ -163,9 +164,7 @@ export default function Dashboard({
         setLoading(true);
 
         /**
-         * =============================================
-         * STAFF DATA
-         * =============================================
+         * USER PROGRESS
          */
 
         const userProgressQuery =
@@ -202,9 +201,7 @@ export default function Dashboard({
         );
 
         /**
-         * =============================================
-         * EXECUTIVE DATA
-         * =============================================
+         * EXECUTIVE APPROVALS
          */
 
         if (executiveMode) {
@@ -325,7 +322,7 @@ export default function Dashboard({
 
   /**
    * =========================================================
-   * RADAR CHART DATA
+   * RADAR DATA
    * =========================================================
    */
 
@@ -448,7 +445,7 @@ export default function Dashboard({
 
   /**
    * =========================================================
-   * APPROVE SUBMISSION
+   * APPROVE
    * =========================================================
    */
 
@@ -498,7 +495,7 @@ export default function Dashboard({
 
   /**
    * =========================================================
-   * REJECT SUBMISSION
+   * REJECT
    * =========================================================
    */
 
@@ -633,10 +630,6 @@ export default function Dashboard({
         border-slate-200
       `,
 
-    subText: darkMode
-      ? 'text-zinc-400'
-      : 'text-slate-500',
-
     toggleButton: darkMode
       ? `
         bg-zinc-900
@@ -662,10 +655,11 @@ export default function Dashboard({
     return (
       <div
         className={`
-          min-h-screen
+          min-h-[70vh]
           flex
           items-center
           justify-center
+          px-6
           ${styles.page}
         `}
       >
@@ -736,9 +730,16 @@ export default function Dashboard({
         className="
           relative
           z-10
-          p-6
-          md:p-8
-          space-y-8
+          px-4
+          py-5
+          sm:px-5
+          sm:py-6
+          md:px-6
+          md:py-8
+          lg:p-8
+          space-y-5
+          sm:space-y-6
+          lg:space-y-8
         "
       >
 
@@ -747,10 +748,10 @@ export default function Dashboard({
           className="
             flex
             flex-col
+            gap-5
             xl:flex-row
             xl:items-center
             xl:justify-between
-            gap-6
           "
         >
 
@@ -773,10 +774,12 @@ export default function Dashboard({
 
             <h1
               className="
-                text-4xl
-                md:text-5xl
+                text-3xl
+                sm:text-4xl
+                lg:text-5xl
                 font-black
                 leading-tight
+                break-words
               "
             >
               Welcome back,
@@ -790,12 +793,20 @@ export default function Dashboard({
 
           </div>
 
-          <div className="flex items-center gap-4">
+          <div
+            className="
+              flex
+              flex-wrap
+              items-center
+              gap-3
+            "
+          >
 
             <div
               className={`
-                px-5
+                px-4
                 py-3
+                sm:px-5
                 rounded-2xl
                 border
                 text-sm
@@ -845,6 +856,88 @@ export default function Dashboard({
 
         </header>
 
+        {/* MOBILE QUICK STATUS */}
+        <div
+          className="
+            lg:hidden
+            sticky
+            top-[72px]
+            z-20
+          "
+        >
+
+          <div
+            className={`
+              rounded-2xl
+              border
+              px-4
+              py-3
+              flex
+              items-center
+              justify-between
+              backdrop-blur-xl
+              ${styles.card}
+            `}
+          >
+
+            <div>
+
+              <p
+                className="
+                  text-[10px]
+                  uppercase
+                  tracking-[0.25em]
+                  opacity-50
+                  font-black
+                  mb-1
+                "
+              >
+                Completion
+              </p>
+
+              <p
+                className="
+                  text-xl
+                  font-black
+                  text-emerald-500
+                "
+              >
+                {completionPercentage}%
+              </p>
+
+            </div>
+
+            <div className="text-right">
+
+              <p
+                className="
+                  text-[10px]
+                  uppercase
+                  tracking-[0.25em]
+                  opacity-50
+                  font-black
+                  mb-1
+                "
+              >
+                Avg Score
+              </p>
+
+              <p
+                className="
+                  text-xl
+                  font-black
+                  text-amber-500
+                "
+              >
+                {averageSkillScore}%
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
         {/* META */}
         <section
           className="
@@ -852,34 +945,29 @@ export default function Dashboard({
             grid-cols-1
             md:grid-cols-2
             xl:grid-cols-3
-            gap-6
+            gap-4
+            lg:gap-6
           "
         >
 
           <MetaCards
             icon={User}
             label="EMPLOYEE NAME"
-            value={
-              currentUser.name
-            }
+            value={currentUser.name}
             darkMode={darkMode}
           />
 
           <MetaCards
             icon={Award}
             label="EMPLOYEE ID"
-            value={
-              currentUser.employeeId
-            }
+            value={currentUser.employeeId}
             darkMode={darkMode}
           />
 
           <MetaCards
             icon={Folder}
             label="DEPARTMENT"
-            value={
-              currentUser.department
-            }
+            value={currentUser.department}
             darkMode={darkMode}
           />
 
@@ -889,95 +977,105 @@ export default function Dashboard({
         <section
           className="
             grid
-            grid-cols-1
-            md:grid-cols-2
+            grid-cols-2
             xl:grid-cols-4
-            gap-6
+            gap-3
+            sm:gap-4
+            lg:gap-6
           "
         >
 
-          {kpiCards.map(
-            (card) => {
+          {kpiCards.map((card) => {
 
-              const Icon =
-                card.icon;
+            const Icon =
+              card.icon;
 
-              return (
+            return (
 
-                <div
-                  key={card.label}
-                  className={`
-                    rounded-3xl
-                    border
-                    p-6
-                    ${styles.card}
-                  `}
-                >
+              <div
+                key={card.label}
+                className={`
+                  rounded-3xl
+                  border
+                  p-4
+                  sm:p-5
+                  lg:p-6
+                  min-h-[150px]
+                  ${styles.card}
+                `}
+              >
 
-                  <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-3">
 
-                    <div>
+                  <div className="min-w-0">
 
-                      <p
-                        className="
-                          text-xs
-                          uppercase
-                          tracking-[0.25em]
-                          opacity-50
-                          font-black
-                        "
-                      >
-                        {card.label}
-                      </p>
-
-                      <h2
-                        className="
-                          mt-4
-                          text-4xl
-                          font-black
-                        "
-                      >
-                        {card.value}
-                      </h2>
-
-                    </div>
-
-                    <div
+                    <p
                       className="
-                        p-4
-                        rounded-2xl
-                        bg-amber-500/10
-                        text-amber-500
+                        text-[10px]
+                        sm:text-xs
+                        uppercase
+                        tracking-[0.25em]
+                        opacity-50
+                        font-black
+                        leading-5
                       "
                     >
-                      <Icon size={22} />
-                    </div>
+                      {card.label}
+                    </p>
 
+                    <h2
+                      className="
+                        mt-4
+                        text-2xl
+                        sm:text-3xl
+                        lg:text-4xl
+                        font-black
+                        break-words
+                      "
+                    >
+                      {card.value}
+                    </h2>
+
+                  </div>
+
+                  <div
+                    className="
+                      p-3
+                      sm:p-4
+                      rounded-2xl
+                      bg-amber-500/10
+                      text-amber-500
+                      shrink-0
+                    "
+                  >
+                    <Icon size={22} />
                   </div>
 
                 </div>
 
-              );
-            }
-          )}
+              </div>
+
+            );
+
+          })}
 
         </section>
 
-        {/* EXECUTIVE PANEL */}
+        {/* EXECUTIVE */}
         {executiveMode && (
 
-          <ExecutiveApprovalPanel
-            submissions={
-              executivePendingApprovals
-            }
-            darkMode={darkMode}
-            onApprove={
-              handleApprove
-            }
-            onReject={
-              handleReject
-            }
-          />
+          <div className="overflow-hidden">
+
+            <ExecutiveApprovalPanel
+              submissions={
+                executivePendingApprovals
+              }
+              darkMode={darkMode}
+              onApprove={handleApprove}
+              onReject={handleReject}
+            />
+
+          </div>
 
         )}
 
@@ -987,7 +1085,8 @@ export default function Dashboard({
             grid
             grid-cols-1
             xl:grid-cols-3
-            gap-6
+            gap-4
+            lg:gap-6
           "
         >
 
@@ -997,15 +1096,16 @@ export default function Dashboard({
               xl:col-span-2
               rounded-3xl
               border
-              p-6
+              p-4
+              sm:p-5
+              lg:p-6
+              overflow-hidden
               ${styles.card}
             `}
           >
 
             <RadarChartCard
-              skills={
-                radarSkills
-              }
+              skills={radarSkills}
               darkMode={darkMode}
             />
 
@@ -1016,7 +1116,9 @@ export default function Dashboard({
             className={`
               rounded-3xl
               border
-              p-6
+              p-4
+              sm:p-5
+              lg:p-6
               ${styles.card}
             `}
           >
@@ -1046,7 +1148,8 @@ export default function Dashboard({
 
               <h2
                 className="
-                  text-2xl
+                  text-xl
+                  sm:text-2xl
                   font-black
                 "
               >
@@ -1071,17 +1174,24 @@ export default function Dashboard({
                       key={training.id}
                       className={`
                         p-4
+                        sm:p-5
                         rounded-2xl
                         border
                         ${styles.card}
                       `}
                     >
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-4">
 
-                        <div>
+                        <div className="min-w-0">
 
-                          <p className="font-bold text-sm">
+                          <p
+                            className="
+                              font-bold
+                              text-sm
+                              break-words
+                            "
+                          >
                             {training.title}
                           </p>
 
@@ -1120,11 +1230,14 @@ export default function Dashboard({
                             rounded-xl
                             hover:text-amber-500
                             transition-all
+                            shrink-0
                           "
                         >
+
                           <ArrowUpRight
                             size={16}
                           />
+
                         </button>
 
                       </div>
@@ -1132,6 +1245,7 @@ export default function Dashboard({
                     </div>
 
                   );
+
                 }
               )}
 

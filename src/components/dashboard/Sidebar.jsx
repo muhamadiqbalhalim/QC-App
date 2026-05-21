@@ -31,36 +31,71 @@ import { ROLES } from '../../config/constants/roles';
 export default function Sidebar({
   onLogout,
 }) {
-  const { darkMode } = useTheme();
 
-  const { getSession } = useSession();
+  /**
+   * =========================================================
+   * HOOKS
+   * =========================================================
+   */
 
-  const currentUser = getSession();
+  const { darkMode } =
+    useTheme();
+
+  const { getSession } =
+    useSession();
+
+  /**
+   * =========================================================
+   * USER
+   * =========================================================
+   */
+
+  const currentUser =
+    getSession();
 
   const userRole =
     currentUser?.role ||
     ROLES.OPERATOR;
 
-  const [isCollapsed, setIsCollapsed] =
-    useState(false);
+  /**
+   * =========================================================
+   * STATES
+   * =========================================================
+   */
 
-  const [isFormOpen, setIsFormOpen] =
-    useState(true);
+  const [
+    isCollapsed,
+    setIsCollapsed,
+  ] = useState(false);
+
+  const [
+    isFormOpen,
+    setIsFormOpen,
+  ] = useState(true);
+
+  /**
+   * =========================================================
+   * STYLES
+   * =========================================================
+   */
 
   const styles = {
+
     active: `
       w-full
       flex
       items-center
       justify-between
-      p-3.5
+      min-h-[56px]
+      px-4
+      py-3.5
       rounded-2xl
       text-sm
       font-semibold
       border
       transition-all
+      duration-300
       shadow-lg
-      hover:scale-[1.02]
       ${
         darkMode
           ? `
@@ -82,10 +117,13 @@ export default function Sidebar({
       flex
       items-center
       justify-between
-      p-3.5
+      min-h-[56px]
+      px-4
+      py-3.5
       rounded-2xl
       text-sm
       transition-all
+      duration-300
       ${
         darkMode
           ? `
@@ -106,12 +144,15 @@ export default function Sidebar({
       flex
       items-center
       gap-3
-      p-3
-      rounded-xl
-      text-[11px]
-      font-medium
+      min-h-[52px]
+      px-4
+      py-3
+      rounded-2xl
+      text-xs
+      font-semibold
       border
       transition-all
+      duration-300
       ${
         darkMode
           ? `
@@ -132,10 +173,13 @@ export default function Sidebar({
       flex
       items-center
       gap-3
-      p-3
-      rounded-xl
-      text-[11px]
+      min-h-[52px]
+      px-4
+      py-3
+      rounded-2xl
+      text-xs
       transition-all
+      duration-300
       ${
         darkMode
           ? `
@@ -150,64 +194,110 @@ export default function Sidebar({
           `
       }
     `,
+
   };
 
   /**
-   * Main menu
+   * =========================================================
+   * MAIN MENUS
+   * =========================================================
    */
-  const mainMenus = useMemo(() => {
-    const baseMenus = [
-      {
-        label: 'Dashboard',
-        icon: LayoutDashboard,
-        path: '/dashboard',
-      },
-    ];
 
-    if (userRole === ROLES.ADMIN) {
-      baseMenus.push(
+  const mainMenus =
+    useMemo(() => {
+
+      const baseMenus = [
+
         {
-          label: 'Analytics',
-          icon: BarChart3,
-          path: '/analytics',
+          label:
+            'Dashboard',
+
+          icon:
+            LayoutDashboard,
+
+          path:
+            '/dashboard',
         },
-        {
-          label: 'User Management',
-          icon: Users,
-          path: '/users',
-        }
-      );
-    }
 
-    return baseMenus;
-  }, [userRole]);
+      ];
+
+      if (
+        userRole === ROLES.ADMIN
+      ) {
+
+        baseMenus.push(
+
+          {
+            label:
+              'Analytics',
+
+            icon:
+              BarChart3,
+
+            path:
+              '/analytics',
+          },
+
+          {
+            label:
+              'User Management',
+
+            icon:
+              Users,
+
+            path:
+              '/users',
+          }
+
+        );
+
+      }
+
+      return baseMenus;
+
+    }, [userRole]);
 
   /**
-   * Dynamic form links
+   * =========================================================
+   * AVAILABLE FORMS
+   * =========================================================
    */
+
   const availableForms =
     useMemo(() => {
+
       return Object.entries(
         FORM_REGISTRY
       ).filter(([, config]) => {
-        if (!config.allowedRoles) {
+
+        if (
+          !config.allowedRoles
+        ) {
+
           return true;
+
         }
 
         return config.allowedRoles.includes(
           userRole
         );
+
       });
+
     }, [userRole]);
 
   /**
-   * Main nav
+   * =========================================================
+   * MAIN NAV
+   * =========================================================
    */
+
   const renderMainNav = ({
     label,
     icon: Icon,
     path,
   }) => (
+
     <NavLink
       key={path}
       to={path}
@@ -217,77 +307,122 @@ export default function Sidebar({
           : styles.inactive
       }
     >
-      <div className="flex items-center gap-3">
 
-        <Icon className="w-4 h-4 shrink-0" />
+      <div className="flex items-center gap-4 min-w-0">
+
+        <Icon
+          className="
+            w-5
+            h-5
+            shrink-0
+          "
+        />
 
         {!isCollapsed && (
-          <span>{label}</span>
+
+          <span className="truncate">
+            {label}
+          </span>
+
         )}
+
       </div>
 
       {!isCollapsed && (
-        <ChevronRight className="w-4 h-4 opacity-40" />
+
+        <ChevronRight
+          className="
+            w-4
+            h-4
+            opacity-40
+            shrink-0
+          "
+        />
+
       )}
+
     </NavLink>
+
   );
 
   /**
-   * Dynamic form links
+   * =========================================================
+   * FORM LINKS
+   * =========================================================
    */
-  const renderFormLinks = () => {
-    return availableForms.map(
-      ([id, config]) => (
-        <NavLink
-          key={id}
-          to={`/registration/${id}`}
-          className={({ isActive }) =>
-            isActive
-              ? styles.subActive
-              : styles.subInactive
-          }
-        >
-          <span
-            className={`
-              w-2
-              h-2
-              rounded-full
-              shrink-0
-              ${
-                config.severity ===
-                'Critical'
-                  ? 'bg-red-500'
-                  : config.severity ===
-                    'High'
-                  ? 'bg-amber-500'
-                  : 'bg-slate-400'
-              }
-            `}
-          />
 
-          {!isCollapsed && (
-            <div className="overflow-hidden">
-              <p className="truncate font-semibold">
-                {config.title}
-              </p>
+  const renderFormLinks =
+    () => {
 
-              <p className="truncate text-[9px] opacity-50 mt-0.5">
-                {id}
-              </p>
-            </div>
-          )}
-        </NavLink>
-      )
-    );
-  };
+      return availableForms.map(
+        ([id, config]) => (
+
+          <NavLink
+            key={id}
+            to={`/registration/${id}`}
+            className={({ isActive }) =>
+              isActive
+                ? styles.subActive
+                : styles.subInactive
+            }
+          >
+
+            <span
+              className={`
+                w-2.5
+                h-2.5
+                rounded-full
+                shrink-0
+                ${
+                  config.severity ===
+                  'Critical'
+                    ? 'bg-red-500'
+                    : config.severity ===
+                      'High'
+                    ? 'bg-amber-500'
+                    : 'bg-slate-400'
+                }
+              `}
+            />
+
+            {!isCollapsed && (
+
+              <div className="overflow-hidden min-w-0">
+
+                <p className="truncate font-semibold">
+                  {config.title}
+                </p>
+
+                <p
+                  className="
+                    truncate
+                    text-[10px]
+                    opacity-50
+                    mt-1
+                  "
+                >
+                  {id}
+                </p>
+
+              </div>
+
+            )}
+
+          </NavLink>
+
+        )
+      );
+
+    };
 
   return (
     <aside
       className={`
+        h-screen
         ${
           isCollapsed
-            ? 'w-24'
-            : 'w-[260px]'
+            ? 'lg:w-24'
+            : 'w-[85vw] max-w-[320px] lg:w-[280px]'
         }
         border-r
         transition-all
@@ -295,7 +430,7 @@ export default function Sidebar({
         flex
         flex-col
         justify-between
-        p-5
+        overflow-hidden
         ${
           darkMode
             ? `
@@ -310,10 +445,25 @@ export default function Sidebar({
         }
       `}
     >
-      {/* TOP */}
-      <div>
 
-        {/* HEADER */}
+      {/* =====================================================
+          CONTENT
+      ===================================================== */}
+
+      <div
+        className="
+          flex-1
+          overflow-y-auto
+          overflow-x-hidden
+          px-4
+          py-5
+        "
+      >
+
+        {/* ===================================================
+            HEADER
+        =================================================== */}
+
         <div
           className="
             flex
@@ -323,15 +473,27 @@ export default function Sidebar({
             mb-6
             border-b
             border-slate-200/10
+            gap-3
           "
         >
-          <div className="flex items-center gap-3 overflow-hidden">
+
+          {/* LEFT */}
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+              overflow-hidden
+              min-w-0
+            "
+          >
 
             <div
               className={`
-                p-2.5
+                p-3
                 rounded-2xl
                 border
+                shrink-0
                 ${
                   darkMode
                     ? `
@@ -345,6 +507,7 @@ export default function Sidebar({
                 }
               `}
             >
+
               <ShieldCheck
                 className="
                   w-5
@@ -352,22 +515,44 @@ export default function Sidebar({
                   text-amber-500
                 "
               />
+
             </div>
 
             {!isCollapsed && (
-              <div>
 
-                <h2 className="text-sm font-black tracking-widest">
+              <div className="min-w-0">
+
+                <h2
+                  className="
+                    text-sm
+                    font-black
+                    tracking-[0.2em]
+                    truncate
+                  "
+                >
                   QC NEXUS
                 </h2>
 
-                <p className="text-[9px] uppercase tracking-[0.2em] opacity-50 mt-1">
+                <p
+                  className="
+                    text-[10px]
+                    uppercase
+                    tracking-[0.2em]
+                    opacity-50
+                    mt-1
+                    truncate
+                  "
+                >
                   {userRole}
                 </p>
+
               </div>
+
             )}
+
           </div>
 
+          {/* COLLAPSE */}
           <button
             onClick={() =>
               setIsCollapsed(
@@ -375,31 +560,57 @@ export default function Sidebar({
               )
             }
             className="
+              hidden
+              lg:flex
+              items-center
+              justify-center
               text-slate-500
               hover:text-amber-500
               transition-colors
+              shrink-0
             "
           >
+
             {isCollapsed ? (
-              <PanelLeftOpen className="w-5 h-5" />
+
+              <PanelLeftOpen
+                className="
+                  w-5
+                  h-5
+                "
+              />
+
             ) : (
-              <PanelLeftClose className="w-5 h-5" />
+
+              <PanelLeftClose
+                className="
+                  w-5
+                  h-5
+                "
+              />
+
             )}
+
           </button>
+
         </div>
 
-        {/* NAVIGATION */}
-        <nav className="space-y-6">
+        {/* ===================================================
+            NAVIGATION
+        =================================================== */}
 
-          {/* MAIN MENU */}
+        <nav className="space-y-7">
+
+          {/* MAIN */}
           <section>
 
             {!isCollapsed && (
+
               <p
                 className="
-                  text-[9px]
+                  text-[10px]
                   uppercase
-                  tracking-[0.25em]
+                  tracking-[0.3em]
                   font-black
                   opacity-40
                   mb-4
@@ -408,24 +619,27 @@ export default function Sidebar({
               >
                 Main Menu
               </p>
+
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {mainMenus.map(
                 renderMainNav
               )}
             </div>
+
           </section>
 
           {/* TRAINING */}
           <section>
 
             {!isCollapsed && (
+
               <p
                 className="
-                  text-[9px]
+                  text-[10px]
                   uppercase
-                  tracking-[0.25em]
+                  tracking-[0.3em]
                   font-black
                   opacity-40
                   mb-4
@@ -434,11 +648,12 @@ export default function Sidebar({
               >
                 Training Management
               </p>
+
             )}
 
             <div
               className={`
-                space-y-1
+                space-y-2
                 ${
                   !isCollapsed
                     ? `
@@ -450,6 +665,7 @@ export default function Sidebar({
                 }
               `}
             >
+
               {/* OG */}
               <NavLink
                 to="/training-og"
@@ -461,19 +677,31 @@ export default function Sidebar({
                     : styles.subInactive
                 }
               >
-                <Database className="w-3.5 h-3.5 shrink-0" />
+
+                <Database
+                  className="
+                    w-4
+                    h-4
+                    shrink-0
+                  "
+                />
 
                 {!isCollapsed && (
+
                   <span>
                     WIS Training
                     (OG)
                   </span>
+
                 )}
+
               </NavLink>
 
-              {/* DROPDOWN */}
+              {/* FORMS */}
               {!isCollapsed && (
+
                 <>
+
                   <button
                     onClick={() =>
                       setIsFormOpen(
@@ -485,9 +713,11 @@ export default function Sidebar({
                       flex
                       items-center
                       justify-between
-                      p-3
-                      rounded-xl
-                      text-[11px]
+                      min-h-[52px]
+                      px-4
+                      py-3
+                      rounded-2xl
+                      text-xs
                       font-medium
                       transition-all
                       ${
@@ -503,9 +733,15 @@ export default function Sidebar({
                       }
                     `}
                   >
+
                     <div className="flex items-center gap-3">
 
-                      <FileText className="w-3.5 h-3.5" />
+                      <FileText
+                        className="
+                          w-4
+                          h-4
+                        "
+                      />
 
                       <span>
                         Training Forms
@@ -515,8 +751,8 @@ export default function Sidebar({
 
                     <ChevronDown
                       className={`
-                        w-3.5
-                        h-3.5
+                        w-4
+                        h-4
                         transition-transform
                         ${
                           isFormOpen
@@ -525,44 +761,61 @@ export default function Sidebar({
                         }
                       `}
                     />
+
                   </button>
 
                   {isFormOpen && (
+
                     <div
                       className="
                         ml-4
-                        pl-2
+                        pl-3
                         border-l
                         border-white/10
-                        space-y-1
+                        space-y-2
                       "
                     >
+
                       {renderFormLinks()}
+
                     </div>
+
                   )}
+
                 </>
+
               )}
+
             </div>
+
           </section>
 
           {/* ADMIN */}
           {userRole ===
             ROLES.ADMIN &&
             !isCollapsed && (
+
               <section>
 
                 <div
                   className="
-                    p-4
-                    rounded-2xl
+                    p-5
+                    rounded-3xl
                     border
                     border-amber-500/20
                     bg-amber-500/5
                   "
                 >
-                  <div className="flex items-center gap-2 mb-2">
 
-                    <Shield className="w-4 h-4 text-amber-500" />
+                  <div className="flex items-center gap-2 mb-3">
+
+                    <Shield
+                      className="
+                        w-4
+                        h-4
+                        text-amber-500
+                      "
+                    />
 
                     <span
                       className="
@@ -575,11 +828,12 @@ export default function Sidebar({
                     >
                       Admin Access
                     </span>
+
                   </div>
 
                   <p
                     className="
-                      text-[10px]
+                      text-[11px]
                       leading-relaxed
                       opacity-60
                     "
@@ -588,14 +842,29 @@ export default function Sidebar({
                     for analytics and
                     training management.
                   </p>
+
                 </div>
+
               </section>
+
             )}
+
         </nav>
+
       </div>
 
-      {/* FOOTER */}
-      <div>
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
+      <div
+        className="
+          p-4
+          border-t
+          border-white/10
+          shrink-0
+        "
+      >
 
         <button
           onClick={onLogout}
@@ -604,25 +873,41 @@ export default function Sidebar({
             flex
             items-center
             gap-3
-            p-3
+            min-h-[56px]
+            px-4
+            py-3
             rounded-2xl
             text-xs
-            font-bold
+            font-black
+            uppercase
+            tracking-widest
             text-red-500
             hover:bg-red-500
             hover:text-white
             transition-all
           "
         >
-          <LogOut className="w-4 h-4 shrink-0" />
+
+          <LogOut
+            className="
+              w-4
+              h-4
+              shrink-0
+            "
+          />
 
           {!isCollapsed && (
+
             <span>
-              TERMINATE SESSION
+              Terminate Session
             </span>
+
           )}
+
         </button>
+
       </div>
+
     </aside>
   );
 }
