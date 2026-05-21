@@ -58,7 +58,7 @@ export function ThemeProvider({ children }) {
    * - light mode
    * =========================================================
    */
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode, setDarkMode] = useState((false) => {
     try {
       const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
 
