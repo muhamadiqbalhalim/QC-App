@@ -15,7 +15,6 @@ import {
   BookOpen,
   LogOut,
   X,
-  Menu,
   Sparkles,
   UserCircle2,
 } from 'lucide-react';
@@ -63,11 +62,6 @@ export default function Sidebar() {
    * STATES
    * =========================================================
    */
-
-  const [
-    mobileOpen,
-    setMobileOpen,
-  ] = useState(false);
 
   /**
    * =========================================================
@@ -510,117 +504,6 @@ export default function Sidebar() {
   return (
 
     <>
-
-      {/* ================================================= */}
-      {/* MOBILE TOPBAR */}
-      {/* ================================================= */}
-
-      <div
-        className={`
-          lg:hidden
-          sticky
-          top-0
-          z-50
-          border-b
-          backdrop-blur-xl
-          px-4
-          py-3
-          flex
-          items-center
-          justify-between
-          ${styles.sidebar}
-        `}
-      >
-
-        <div>
-
-          <p
-            className="
-              text-xs
-              uppercase
-              tracking-[0.15em]
-              text-amber-500
-              font-black
-              mb-1
-            "
-          >
-            QC Training
-          </p>
-
-          <h1 className="font-black">
-            NSSB
-          </h1>
-
-        </div>
-
-        <button
-          onClick={() =>
-            setMobileOpen(true)
-          }
-          className="
-            p-3
-            rounded-2xl
-            bg-amber-500
-            text-slate-950
-            shadow-lg
-            shadow-amber-500/20
-          "
-        >
-
-          <Menu size={20} />
-
-        </button>
-
-      </div>
-
-      {/* ================================================= */}
-      {/* MOBILE OVERLAY */}
-      {/* ================================================= */}
-
-      {mobileOpen && (
-
-        <div
-          onClick={() =>
-            setMobileOpen(false)
-          }
-          className="
-            fixed
-            inset-0
-            z-[90]
-            bg-black/60
-            backdrop-blur-sm
-            lg:hidden
-          "
-        />
-
-      )}
-
-      {/* ================================================= */}
-      {/* MOBILE SIDEBAR */}
-      {/* ================================================= */}
-
-      <div
-        className={`
-          fixed
-          inset-y-0
-          left-0
-          z-[100]
-          w-[280px]
-          transition-transform
-          duration-300
-          lg:hidden
-          ${
-            mobileOpen
-              ? 'translate-x-0'
-              : '-translate-x-full'
-          }
-        `}
-      >
-
-        <SidebarContent />
-
-      </div>
-
       {/* ================================================= */}
       {/* DESKTOP SIDEBAR */}
       {/* ================================================= */}
