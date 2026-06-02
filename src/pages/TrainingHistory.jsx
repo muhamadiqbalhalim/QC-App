@@ -99,10 +99,11 @@ export default function TrainingHistory() {
       async () => {
 
         try {
-
           if (
             !currentUser?.employeeId
           ) {
+
+            setLoading(false);
 
             return;
 

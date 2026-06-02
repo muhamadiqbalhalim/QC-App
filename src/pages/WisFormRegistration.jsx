@@ -17,9 +17,7 @@ import {
   Loader2,
   CheckCircle2,
   Clock3,
-  ShieldAlert,
   XCircle,
-  FileDown,
 } from 'lucide-react';
 
 import {
@@ -45,27 +43,12 @@ import {
 } from '../config/constants/storageKeys';
 
 import {
-  ROLES,
-} from '../config/constants/roles';
-
-import {
   TRAINING_STATUS,
-  RESULT_STATUS,
 } from '../config/constants/status';
 
 import DynamicFormEngine from '../components/dashboard/forms/engine/DynamicFormEngine';
 
-import {
-  exportAuditPdf,
-} from '../utils/pdf/exportAuditPdf';
-
 export default function WisFormRegistration() {
-
-  /**
-   * =========================================================
-   * HOOKS
-   * =========================================================
-   */
 
   const navigate =
     useNavigate();
@@ -139,7 +122,7 @@ export default function WisFormRegistration() {
 
   /**
    * =========================================================
-   * WORKFLOW STATUS
+   * WORKFLOW DATA
    * =========================================================
    */
 
@@ -148,7 +131,7 @@ export default function WisFormRegistration() {
 
   /**
    * =========================================================
-   * RESTORE ACTIVE TAB
+   * LOAD SAVED TAB
    * =========================================================
    */
 
@@ -177,7 +160,7 @@ export default function WisFormRegistration() {
 
   /**
    * =========================================================
-   * SAVE ACTIVE TAB
+   * SAVE TAB
    * =========================================================
    */
 
@@ -195,20 +178,22 @@ export default function WisFormRegistration() {
 
   /**
    * =========================================================
-   * FETCH WORKFLOW STATUS
+   * FETCH WORKFLOW
    * =========================================================
    */
 
   const fetchWorkflowStatus =
     useCallback(async () => {
 
-      if (
-        !currentUser?.employeeId
-      ) {
+    if (
+      !currentUser?.employeeId
+    ) {
 
-        return;
+      setLoading(false);
 
-      }
+      return;
+
+    }
 
       try {
 
@@ -228,9 +213,31 @@ export default function WisFormRegistration() {
           snapshot.exists()
         ) {
 
+          const data =
+            snapshot.data();
+
           setWorkflowData(
-            snapshot.data()
+            data
           );
+
+          /**
+           * LOAD SUBMITTED ANSWERS
+           */
+
+          if (
+            data.answers
+          ) {
+
+            setFormData((prev) => ({
+
+              ...prev,
+
+              inspection:
+                data.answers,
+
+            }));
+
+          }
 
         }
 
@@ -275,7 +282,7 @@ export default function WisFormRegistration() {
           currentUser?.name ||
           'N/A',
 
-        staffNo:
+        OperatorNo:
           currentUser?.employeeId ||
           'N/A',
 
@@ -285,14 +292,11 @@ export default function WisFormRegistration() {
 
         role:
           currentUser?.role ||
-          ROLES.STAFF,
+          'OPERATOR',
 
         date: new Date()
           .toISOString()
           .split('T')[0],
-
-        preTest: '',
-        postTest: '',
 
       },
 
@@ -313,23 +317,21 @@ export default function WisFormRegistration() {
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  const [submitSuccess, setSubmitSuccess] =
-    useState(false);
-
   const [errorMessage, setErrorMessage] =
     useState('');
 
   /**
    * =========================================================
-   * LIVE SCORE
+   * INSPECTION SUMMARY
    * =========================================================
    */
 
-  const totalMark =
+  const inspectionSummary =
     useMemo(() => {
 
-      let totalAnswers = 0;
-      let totalPassed = 0;
+      let total = 0;
+      let passed = 0;
+      let failed = 0;
 
       Object.values(
         formData.inspection || {}
@@ -343,15 +345,25 @@ export default function WisFormRegistration() {
             row || {}
           ).forEach((value) => {
 
-            totalAnswers++;
+            if (!value) {
+              return;
+            }
+
+            total++;
 
             if (
-              value === 1 ||
-              value === '1' ||
-              value === 'OK'
+              value === 'PASS'
             ) {
 
-              totalPassed++;
+              passed++;
+
+            }
+
+            if (
+              value === 'FAIL'
+            ) {
+
+              failed++;
 
             }
 
@@ -361,58 +373,23 @@ export default function WisFormRegistration() {
 
       });
 
-      if (totalAnswers === 0) {
-        return 0;
-      }
+      return {
 
-      return Math.round(
-        (
-          totalPassed /
-          totalAnswers
-        ) * 100
-      );
+        total,
+        passed,
+        failed,
+
+        ready:
+          total > 0 &&
+          failed === 0,
+
+      };
 
     }, [formData.inspection]);
 
   /**
    * =========================================================
-   * EXPORT PDF
-   * =========================================================
-   */
-
-  const handleExportPdf =
-    async () => {
-
-      try {
-
-        await exportAuditPdf({
-
-          currentUser,
-
-          trainingConfig,
-
-          workflowData,
-
-          formData,
-
-          totalMark,
-
-        });
-
-      } catch (error) {
-
-        console.error(
-          'PDF export failed:',
-          error
-        );
-
-      }
-
-    };
-
-  /**
-   * =========================================================
-   * HANDLE INSPECTION
+   * INSPECTION CHANGE
    * =========================================================
    */
 
@@ -523,32 +500,29 @@ export default function WisFormRegistration() {
             `${currentUser.employeeId}_${trainingId}`
           );
 
-        const passingScore =
-          trainingConfig.passingScore || 80;
-
-        const resultStatus =
-          totalMark >= passingScore
-            ? RESULT_STATUS.PASSED
-            : RESULT_STATUS.PROBATION;
-
         await setDoc(
           progressRef,
           {
 
             userId:
-              currentUser.id,
+              currentUser?.id ||
+              'N/A',
 
             employeeId:
-              currentUser.employeeId,
+              currentUser?.employeeId ||
+              'N/A',
 
             employeeName:
-              currentUser.name,
+              currentUser?.name ||
+              'Unknown',
 
             department:
-              currentUser.department,
+              currentUser?.department ||
+              'N/A',
 
             role:
-              currentUser.role,
+              currentUser?.role ||
+              'OPERATOR',
 
             trainingId,
 
@@ -558,13 +532,6 @@ export default function WisFormRegistration() {
             severity:
               trainingConfig.severity ||
               'Standard',
-
-            finalScore:
-              totalMark,
-
-            passingScore,
-
-            resultStatus,
 
             lifecycleStatus:
               TRAINING_STATUS.SUBMITTED,
@@ -590,10 +557,13 @@ export default function WisFormRegistration() {
             meta:
               formData.meta,
 
+            inspectionSummary,
+
             completedAt:
               new Date().toISOString(),
 
             createdAt:
+              workflowData?.createdAt ||
               new Date().toISOString(),
 
             updatedAt:
@@ -605,6 +575,10 @@ export default function WisFormRegistration() {
           }
         );
 
+        /**
+         * CLEAR DRAFT
+         */
+
         localStorage.removeItem(
           draftKey
         );
@@ -613,15 +587,23 @@ export default function WisFormRegistration() {
           tabKey
         );
 
-        setSubmitSuccess(true);
+        /**
+         * REFRESH STATUS
+         */
 
         fetchWorkflowStatus();
 
+        /**
+         * REDIRECT
+         */
+
         setTimeout(() => {
 
-          navigate('/dashboard');
+          navigate(
+            '/training-og'
+          );
 
-        }, 1500);
+        }, 1200);
 
       } catch (error) {
 
@@ -644,7 +626,7 @@ export default function WisFormRegistration() {
 
   /**
    * =========================================================
-   * STATUS BANNER
+   * WORKFLOW BANNER
    * =========================================================
    */
 
@@ -657,6 +639,10 @@ export default function WisFormRegistration() {
 
       const status =
         workflowData.lifecycleStatus;
+
+      /**
+       * APPROVED
+       */
 
       if (
         status ===
@@ -678,7 +664,7 @@ export default function WisFormRegistration() {
                 </h3>
 
                 <p className="text-sm opacity-80">
-                  Your audit has been reviewed and approved.
+                  This inspection audit has been approved.
                 </p>
 
               </div>
@@ -690,6 +676,10 @@ export default function WisFormRegistration() {
         );
 
       }
+
+      /**
+       * REJECTED
+       */
 
       if (
         status ===
@@ -707,7 +697,7 @@ export default function WisFormRegistration() {
               <div>
 
                 <h3 className="font-black text-lg mb-2">
-                  Submission Rejected
+                  Audit Rejected
                 </h3>
 
                 <p className="text-sm opacity-80">
@@ -723,6 +713,10 @@ export default function WisFormRegistration() {
         );
 
       }
+
+      /**
+       * SUBMITTED
+       */
 
       if (
         status ===
@@ -740,44 +734,11 @@ export default function WisFormRegistration() {
               <div>
 
                 <h3 className="font-black text-lg mb-2">
-                  Waiting Executive Approval
+                  Pending Executive Approval
                 </h3>
 
                 <p className="text-sm opacity-80">
-                  Audit submitted successfully and pending executive review.
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        );
-
-      }
-
-      if (
-        workflowData.resultStatus ===
-        RESULT_STATUS.PROBATION
-      ) {
-
-        return (
-
-          <div className="p-5 rounded-3xl border border-orange-500/20 bg-orange-500/10 text-orange-400">
-
-            <div className="flex items-start gap-4">
-
-              <ShieldAlert size={22} />
-
-              <div>
-
-                <h3 className="font-black text-lg mb-2">
-                  Probation Required
-                </h3>
-
-                <p className="text-sm opacity-80">
-                  Final score below passing threshold.
+                  Audit submitted successfully and waiting for executive review.
                 </p>
 
               </div>
@@ -794,6 +755,12 @@ export default function WisFormRegistration() {
 
     };
 
+  /**
+   * =========================================================
+   * INVALID TRAINING
+   * =========================================================
+   */
+
   if (!trainingConfig) {
 
     return (
@@ -807,10 +774,19 @@ export default function WisFormRegistration() {
   return (
     <div
       className={`
-        max-w-7xl
+        min-h-screen
+        w-full
+        max-w-full
         mx-auto
-        p-6
-        space-y-6
+        px-3
+        py-4
+        pb-32
+        sm:px-5
+        sm:py-5
+        lg:px-8
+        lg:py-8
+        space-y-4
+        sm:space-y-5
         ${
           darkMode
             ? 'text-white'
@@ -821,72 +797,66 @@ export default function WisFormRegistration() {
 
       {renderWorkflowBanner()}
 
+      {/* ===================================================== */}
       {/* TOP BAR */}
-      <div className="flex items-center justify-between">
+      {/* ===================================================== */}
+
+      <div
+        className="
+          flex
+          flex-col
+          gap-4
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+        "
+      >
 
         <button
           onClick={() =>
             navigate('/training-og')
           }
           className="
-            flex items-center gap-2
-            text-xs
-            font-black
-            uppercase
-            tracking-widest
+            flex
+            items-center
+            gap-2
+            text-sm
+            font-bold
             opacity-60
             hover:opacity-100
             transition-all
           "
         >
 
-          <ArrowLeft size={14} />
+          <ArrowLeft size={16} />
 
           Back to Trainings
 
         </button>
 
-        <div className="flex items-center gap-3">
+        <div
+          className="
+            flex
+            flex-wrap
+            items-center
+            gap-3
+          "
+        >
 
-          {/* EXPORT */}
-          <button
-            onClick={handleExportPdf}
-            className="
-              flex items-center gap-2
-              px-5 py-3
-              rounded-2xl
-              border
-              border-blue-500/20
-              bg-blue-500/10
-              hover:bg-blue-500/20
-              text-blue-400
-              text-xs
-              font-black
-              uppercase
-              tracking-widest
-              transition-all
-            "
-          >
-
-            <FileDown size={16} />
-
-            Export PDF
-
-          </button>
-
-          {/* SEVERITY */}
           <div
             className="
-              px-4 py-2
+              flex
+              items-center
+              justify-center
+              px-4
+              py-3
               rounded-2xl
               border
               border-amber-500/20
               bg-amber-500/10
               text-amber-400
-              text-xs
-              font-black
-              uppercase
-              tracking-widest
+              text-sm
+              font-bold
             "
           >
             {trainingConfig.severity}
@@ -896,17 +866,21 @@ export default function WisFormRegistration() {
 
       </div>
 
+      {/* ===================================================== */}
       {/* HEADER */}
+      {/* ===================================================== */}
+
       <div
         className={`
-          p-6
+          p-5
+          sm:p-6
           rounded-3xl
           border
           ${
             darkMode
               ? `
-                bg-white/5
-                border-white/10
+                bg-slate-900
+                border-slate-800
               `
               : `
                 bg-white
@@ -916,44 +890,104 @@ export default function WisFormRegistration() {
         `}
       >
 
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-500 font-black mb-3">
+        <p className="text-sm text-amber-500 font-bold mb-3">
           Training Audit
         </p>
 
-        <h1 className="text-3xl font-black">
+        <h1
+          className="
+            text-2xl
+            sm:text-3xl
+            lg:text-4xl
+            font-black
+            leading-tight
+            break-words
+          "
+        >
           {trainingConfig.title}
         </h1>
 
-        <p className="text-sm opacity-60 mt-3 max-w-2xl">
+        <p className="text-sm opacity-60 mt-3 max-w-2xl leading-7">
           {trainingConfig.description}
         </p>
 
+        {/* ================================================= */}
+        {/* STATUS */}
+        {/* ================================================= */}
+
         <div className="flex flex-wrap items-center gap-3 mt-6">
 
-          <div className="px-4 py-2 rounded-2xl border border-white/10 text-xs font-bold uppercase tracking-widest opacity-70">
+          <div className="px-4 py-2 rounded-2xl border border-slate-300 dark:border-slate-700 text-xs font-bold opacity-70">
             {trainingConfig.code}
           </div>
 
-          <div className="px-4 py-2 rounded-2xl border border-white/10 text-xs font-bold uppercase tracking-widest opacity-70">
-            Passing Score:
+          <div className="px-4 py-2 rounded-2xl border border-blue-500/20 bg-blue-500/10 text-blue-400 text-xs font-bold">
+            Total:
             {' '}
-            {trainingConfig.passingScore}%
+            {inspectionSummary.total}
           </div>
 
-          <div className="px-4 py-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-black uppercase tracking-widest">
-            Live Score:
+          <div className="px-4 py-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-bold">
+            PASS:
             {' '}
-            {totalMark}%
+            {inspectionSummary.passed}
+          </div>
+
+          <div className="px-4 py-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-red-400 text-xs font-bold">
+            FAIL:
+            {' '}
+            {inspectionSummary.failed}
+          </div>
+
+          <div
+            className={`
+              px-4
+              py-2
+              rounded-2xl
+              border
+              text-xs
+              font-bold
+              ${
+                inspectionSummary.ready
+                  ? `
+                    border-emerald-500/20
+                    bg-emerald-500/10
+                    text-emerald-400
+                  `
+                  : `
+                    border-amber-500/20
+                    bg-amber-500/10
+                    text-amber-400
+                  `
+              }
+            `}
+          >
+
+            {inspectionSummary.ready
+              ? 'READY FOR REVIEW'
+              : 'REQUIRES REVIEW'}
+
           </div>
 
         </div>
 
       </div>
 
+      {/* ===================================================== */}
       {/* TABS */}
+      {/* ===================================================== */}
+
       {trainingConfig.tabs && (
 
-        <div className="flex gap-3">
+        <div
+          className="
+            flex
+            overflow-x-auto
+            gap-3
+            pb-2
+            scrollbar-thin
+          "
+        >
 
           {trainingConfig.tabs.map(
             (tab) => (
@@ -964,12 +998,13 @@ export default function WisFormRegistration() {
                   setActiveTab(tab)
                 }
                 className={`
-                  px-6 py-3
+                  min-w-[120px]
+                  min-h-[52px]
+                  px-6
                   rounded-2xl
                   text-sm
-                  font-black
-                  uppercase
-                  tracking-widest
+                  whitespace-nowrap
+                  font-bold
                   transition-all
                   ${
                     activeTab === tab
@@ -979,7 +1014,8 @@ export default function WisFormRegistration() {
                       `
                       : `
                         border
-                        border-white/10
+                        border-slate-300
+                        dark:border-slate-700
                       `
                   }
                 `}
@@ -994,7 +1030,10 @@ export default function WisFormRegistration() {
 
       )}
 
+      {/* ===================================================== */}
       {/* FORM */}
+      {/* ===================================================== */}
+
       <DynamicFormEngine
         trainingId={trainingId}
         trainingConfig={trainingConfig}
@@ -1006,11 +1045,19 @@ export default function WisFormRegistration() {
         }
       />
 
+      {/* ===================================================== */}
       {/* SUBMIT */}
+      {/* ===================================================== */}
+
       <div
         className={`
-          p-6
-          rounded-3xl
+          sticky
+          bottom-0
+          z-40
+          p-4
+          sm:p-6
+          rounded-t-3xl
+          lg:rounded-3xl
           border
           flex
           flex-col
@@ -1018,25 +1065,26 @@ export default function WisFormRegistration() {
           gap-6
           justify-between
           lg:items-center
+          backdrop-blur-xl
           ${
             darkMode
               ? `
-                bg-white/5
-                border-white/10
+                bg-slate-900/95
+                border-slate-800
               `
               : `
-                bg-white
+                bg-white/95
                 border-slate-200
               `
           }
         `}
       >
 
-        <div className="space-y-3">
+        <div className="space-y-3 w-full">
 
           <div>
 
-            <p className="text-xs uppercase tracking-[0.3em] opacity-50 font-black mb-2">
+            <p className="text-sm font-bold mb-2">
               Executive Approval ID
             </p>
 
@@ -1049,26 +1097,34 @@ export default function WisFormRegistration() {
               onChange={
                 handleApprovalChange
               }
-              placeholder="2500"
+              placeholder="Enter executive ID"
               className="
-                px-5 py-4
+                w-full
+                sm:min-w-[260px]
+                px-5
+                py-4
                 rounded-2xl
                 border
-                border-white/10
+                border-slate-300
+                dark:border-slate-700
                 bg-transparent
-                font-mono
                 outline-none
                 focus:border-amber-500/30
-                min-w-[260px]
               "
             />
+
+            <p className="text-xs opacity-60 mt-2">
+              Executive responsible for approval
+            </p>
 
           </div>
 
           {errorMessage && (
+
             <p className="text-sm text-red-500 font-medium">
               {errorMessage}
             </p>
+
           )}
 
         </div>
@@ -1077,18 +1133,24 @@ export default function WisFormRegistration() {
           onClick={handleSubmit}
           disabled={isSubmitting}
           className="
-            flex items-center justify-center gap-3
-            px-8 py-5
+            w-full
+            sm:min-w-[220px]
+            flex
+            items-center
+            justify-center
+            gap-3
+            px-8
+            py-5
             rounded-2xl
             bg-amber-500
             hover:bg-amber-400
+            active:scale-[0.98]
             disabled:opacity-50
             text-slate-950
             font-black
             uppercase
-            tracking-widest
+            tracking-wider
             transition-all
-            min-w-[220px]
           "
         >
 
@@ -1098,12 +1160,12 @@ export default function WisFormRegistration() {
                 size={18}
                 className="animate-spin"
               />
-              Finalizing...
+              Submitting...
             </>
           ) : (
             <>
               <ShieldCheck size={18} />
-              Finalize Audit
+              Submit Audit
             </>
           )}
 

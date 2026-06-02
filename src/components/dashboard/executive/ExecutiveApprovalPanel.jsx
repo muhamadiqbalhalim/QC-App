@@ -20,7 +20,7 @@ import {
  * RESPONSIBILITIES:
  * - Show pending approvals
  * - Approve / reject actions
- * - Staff submission overview
+ * - Operator submission overview
  * - Executive workflow handling
  * =========================================================
  */
@@ -163,7 +163,7 @@ function ExecutiveApprovalPanel({
               font-black
             "
           >
-            Pending Staff Approvals
+            Pending Operator Approvals
           </h2>
 
         </div>
@@ -246,7 +246,7 @@ function ExecutiveApprovalPanel({
                         "
                       >
                         {submission.employeeName ||
-                          'Unknown Staff'}
+                          'Unknown Operator'}
                       </h3>
 
                       <p
@@ -340,7 +340,9 @@ function ExecutiveApprovalPanel({
                       <Clock3 size={12} />
 
                       <span>
-                        {submission.completedAt ||
+                        {new Date(
+                          submission.completedAt
+                        ).toLocaleString() ||
                           'Recently submitted'}
                       </span>
 

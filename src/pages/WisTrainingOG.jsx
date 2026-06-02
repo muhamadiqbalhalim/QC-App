@@ -1,4 +1,5 @@
 import React, {
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -16,20 +17,38 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore';
+
+import { db } from '../config/firebase';
+
 import { useTheme } from '../context/ThemeContext';
 
 import { FORM_REGISTRY } from '../config/FormRegistry';
 
 import { SEVERITY } from '../config/constants/severity';
-import { TRAINING_STATUS } from '../config/constants/status';
-import { STORAGE_KEYS } from '../config/constants/storageKeys';
+
+import {
+  TRAINING_STATUS,
+} from '../config/constants/status';
+
+import {
+  STORAGE_KEYS,
+} from '../config/constants/storageKeys';
 
 export default function WisTrainingOG({
   user: propUser,
 }) {
-  const { darkMode } = useTheme();
 
-  const navigate = useNavigate();
+  const { darkMode } =
+    useTheme();
+
+  const navigate =
+    useNavigate();
 
   /**
    * =========================================================
@@ -44,75 +63,161 @@ export default function WisTrainingOG({
    * CURRENT USER
    * =========================================================
    */
-  const currentUser = useMemo(() => {
-    if (
-      propUser &&
-      Object.keys(propUser).length > 0
-    ) {
-      return propUser;
-    }
+  const currentUser =
+    useMemo(() => {
 
-    return JSON.parse(
-      localStorage.getItem(
-        STORAGE_KEYS.SESSION
-      ) || '{}'
-    );
-  }, [propUser]);
+      if (
+        propUser &&
+        Object.keys(propUser).length > 0
+      ) {
+
+        return propUser;
+
+      }
+
+      return JSON.parse(
+        localStorage.getItem(
+          STORAGE_KEYS.SESSION
+        ) || '{}'
+      );
+
+    }, [propUser]);
 
   /**
    * =========================================================
-   * USER DATA
+   * PROGRESS STATE
    * =========================================================
    */
-  const completedTrainings =
-    currentUser?.completedTrainings ||
-    [];
+  const [progressMap, setProgressMap] =
+    useState({});
 
-  const isExecutive =
-    currentUser?.role ===
-      'Executive' ||
-    currentUser?.employeeId?.startsWith(
-      'EXEC'
-    );
+  const [loadingProgress, setLoadingProgress] =
+    useState(true);
 
   /**
    * =========================================================
-   * HELPERS
+   * LOAD FIREBASE PROGRESS
+   * =========================================================
+   */
+  useEffect(() => {
+
+    const loadProgress =
+      async () => {
+
+        if (
+          !currentUser?.employeeId
+        ) {
+
+          setLoadingProgress(false);
+          return;
+
+        }
+
+        try {
+
+          const progressQuery =
+            query(
+              collection(
+                db,
+                'user_progress'
+              ),
+              where(
+                'employeeId',
+                '==',
+                currentUser.employeeId
+              )
+            );
+
+          const snapshot =
+            await getDocs(
+              progressQuery
+            );
+
+          const map = {};
+
+          snapshot.forEach((doc) => {
+
+            const data =
+              doc.data();
+
+            map[
+              data.trainingId
+            ] = data;
+
+          });
+
+          setProgressMap(map);
+
+        } catch (error) {
+
+          console.error(
+            'Failed loading progress:',
+            error
+          );
+
+        } finally {
+
+          setLoadingProgress(false);
+
+        }
+
+      };
+
+    loadProgress();
+
+  }, [currentUser]);
+
+  /**
+   * =========================================================
+   * EXECUTIVE CHECK
+   * =========================================================
+   */
+  const isExecutive =
+    currentUser?.role ===
+    'EXECUTIVE';
+
+  /**
+   * =========================================================
+   * DATE FORMATTER
    * =========================================================
    */
   const formatDate = (date) => {
-    if (!date) return 'N/A';
+
+    if (!date) {
+      return 'N/A';
+    }
 
     return new Date(
       date
-    ).toLocaleDateString('en-MY', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
+    ).toLocaleDateString(
+      'en-MY',
+      {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }
+    );
   };
 
   /**
    * =========================================================
-   * STYLES
+   * THEME STYLES
    * =========================================================
    */
   const styles = {
+
     page: darkMode
       ? 'bg-[#0F172A] text-white'
       : 'bg-[#F8FAFC] text-slate-900',
 
     card: darkMode
       ? `
-        bg-white/5
-        border-white/10
-        hover:border-amber-500/20
-        backdrop-blur-xl
+        bg-slate-900
+        border-slate-800
       `
       : `
         bg-white
         border-slate-200
-        hover:border-slate-300
       `,
 
     subText: darkMode
@@ -120,8 +225,17 @@ export default function WisTrainingOG({
       : 'text-slate-500',
 
     filterButton: darkMode
-      ? 'text-slate-400 hover:text-white'
-      : 'text-slate-500 hover:text-slate-900',
+      ? `
+        text-slate-400
+        hover:text-white
+        border-slate-700
+      `
+      : `
+        text-slate-500
+        hover:text-slate-900
+        border-slate-300
+      `,
+
   };
 
   /**
@@ -131,10 +245,15 @@ export default function WisTrainingOG({
    */
   const processedTrainings =
     useMemo(() => {
+
       return Object.entries(
         FORM_REGISTRY
       )
         .map(([id, config]) => {
+
+          const progress =
+            progressMap[id];
+
           const deadline =
             config.deadline
               ? new Date(
@@ -142,73 +261,83 @@ export default function WisTrainingOG({
                 )
               : null;
 
-          const today = new Date();
-
-          const isCompleted =
-            completedTrainings.includes(
-              id
-            );
+          const today =
+            new Date();
 
           let status =
-            TRAINING_STATUS.NOT_TAKEN;
+            TRAINING_STATUS.NOT_STARTED;
 
-          if (isCompleted) {
+          if (progress) {
+
             status =
-              TRAINING_STATUS.TAKEN;
+              progress.lifecycleStatus ||
+              TRAINING_STATUS.SUBMITTED;
+
           } else if (
             deadline &&
             today > deadline
           ) {
+
             status =
               TRAINING_STATUS.MISSED;
+
           }
 
           return {
+
             id,
 
             title:
-              config.title ||
-              'Untitled Training',
+              config.title,
 
             severity:
-              config.severity ||
-              SEVERITY.STANDARD,
+              config.severity,
 
             deadline:
-              config.deadline ||
-              'N/A',
+              config.deadline,
 
             createdAt:
-              config.createdAt ||
-              '2026-01-01',
+              config.createdAt,
 
             status,
 
+            progress,
+
             isNew: (() => {
+
               const createdDate =
                 new Date(
-                  config.createdAt ||
-                    '2026-01-01'
+                  config.createdAt
                 );
 
               const diffDays =
                 (today - createdDate) /
-                (1000 *
+                (
+                  1000 *
                   60 *
                   60 *
-                  24);
+                  24
+                );
 
               return diffDays <= 7;
+
             })(),
+
           };
+
         })
 
         .sort(
           (a, b) =>
-            new Date(b.createdAt) -
-            new Date(a.createdAt)
+            new Date(
+              b.createdAt
+            ) -
+            new Date(
+              a.createdAt
+            )
         );
-    }, [completedTrainings]);
+
+    }, [progressMap]);
 
   /**
    * =========================================================
@@ -217,11 +346,14 @@ export default function WisTrainingOG({
    */
   const filteredTrainings =
     useMemo(() => {
+
       if (
         activeFilter ===
         TRAINING_STATUS.ALL
       ) {
+
         return processedTrainings;
+
       }
 
       return processedTrainings.filter(
@@ -229,6 +361,7 @@ export default function WisTrainingOG({
           training.status ===
           activeFilter
       );
+
     }, [
       activeFilter,
       processedTrainings,
@@ -240,53 +373,51 @@ export default function WisTrainingOG({
    * =========================================================
    */
   const filterTabs = [
+
     TRAINING_STATUS.ALL,
+
+    TRAINING_STATUS.NOT_STARTED,
+
+    TRAINING_STATUS.SUBMITTED,
+
+    TRAINING_STATUS.APPROVED,
+
+    TRAINING_STATUS.REJECTED,
+
     TRAINING_STATUS.MISSED,
-    TRAINING_STATUS.TAKEN,
-    TRAINING_STATUS.NOT_TAKEN,
+
   ];
 
   /**
    * =========================================================
-   * HELPERS
+   * STATUS STYLE
    * =========================================================
    */
-  const getSeverityStyle = (
-    severity
+  const getStatusStyle = (
+    status
   ) => {
-    switch (severity) {
-      case SEVERITY.CRITICAL:
-        return `
-          bg-red-500/10
-          text-red-500
-          border-red-500/20
-        `;
 
-      case SEVERITY.HIGH:
+    switch (status) {
+
+      case TRAINING_STATUS.SUBMITTED:
         return `
           bg-amber-500/10
           text-amber-500
           border-amber-500/20
         `;
 
-      default:
-        return `
-          bg-blue-500/10
-          text-blue-500
-          border-blue-500/20
-        `;
-    }
-  };
-
-  const getStatusStyle = (
-    status
-  ) => {
-    switch (status) {
-      case TRAINING_STATUS.TAKEN:
+      case TRAINING_STATUS.APPROVED:
         return `
           bg-emerald-500/10
           text-emerald-500
           border-emerald-500/20
+        `;
+
+      case TRAINING_STATUS.REJECTED:
+        return `
+          bg-red-500/10
+          text-red-500
+          border-red-500/20
         `;
 
       case TRAINING_STATUS.MISSED:
@@ -305,13 +436,36 @@ export default function WisTrainingOG({
     }
   };
 
+  /**
+   * =========================================================
+   * STATUS ICON
+   * =========================================================
+   */
   const getStatusIcon = (
     status
   ) => {
+
     switch (status) {
-      case TRAINING_STATUS.TAKEN:
+
+      case TRAINING_STATUS.SUBMITTED:
+        return (
+          <Clock3
+            size={12}
+            className="shrink-0"
+          />
+        );
+
+      case TRAINING_STATUS.APPROVED:
         return (
           <CheckCircle2
+            size={12}
+            className="shrink-0"
+          />
+        );
+
+      case TRAINING_STATUS.REJECTED:
+        return (
+          <CircleAlert
             size={12}
             className="shrink-0"
           />
@@ -337,40 +491,92 @@ export default function WisTrainingOG({
 
   /**
    * =========================================================
+   * SEVERITY STYLE
+   * =========================================================
+   */
+  const getSeverityStyle = (
+    severity
+  ) => {
+
+    switch (severity) {
+
+      case SEVERITY.CRITICAL:
+        return `
+          bg-red-500/10
+          text-red-500
+          border-red-500/20
+        `;
+
+      case SEVERITY.HIGH:
+        return `
+          bg-amber-500/10
+          text-amber-500
+          border-amber-500/20
+        `;
+
+      default:
+        return `
+          bg-blue-500/10
+          text-blue-500
+          border-blue-500/20
+        `;
+    }
+  };
+
+  /**
+   * =========================================================
    * ACTIONS
    * =========================================================
    */
   const handleOpenTraining = (
     id
   ) => {
-    navigate(`/registration/${id}`);
+
+    navigate(
+      `/registration/${id}`
+    );
+
   };
 
   return (
     <div
       className={`
         min-h-screen
-        p-6
+        px-4
+        py-5
+        sm:px-6
+        sm:py-6
+        lg:px-8
+        lg:py-8
         transition-colors
         duration-300
         relative
-        overflow-hidden
+        overflow-x-hidden
         ${styles.page}
       `}
     >
-      {/* BG FX */}
-      {darkMode && (
-        <>
-          <div className="fixed top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-900/10 blur-[120px] pointer-events-none z-0" />
 
-          <div className="fixed bottom-[-10%] right-[-10%] w-[30vw] h-[30vw] rounded-full bg-indigo-950/20 blur-[100px] pointer-events-none z-0" />
-        </>
-      )}
-
-      <div className="relative z-10 max-w-7xl mx-auto space-y-8">
+      <div
+        className="
+          relative
+          z-10
+          max-w-7xl
+          mx-auto
+          space-y-6
+        "
+      >
 
         {/* HEADER */}
-        <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6">
+        <div
+          className="
+            flex
+            flex-col
+            lg:flex-row
+            justify-between
+            lg:items-center
+            gap-6
+          "
+        >
 
           <div>
 
@@ -378,7 +584,14 @@ export default function WisTrainingOG({
               Training Management
             </p>
 
-            <h1 className="text-4xl font-black">
+            <h1
+              className="
+                text-3xl
+                sm:text-4xl
+                font-black
+                leading-tight
+              "
+            >
               WIS Training
               <span className="text-amber-500">
                 {' '}
@@ -387,12 +600,17 @@ export default function WisTrainingOG({
             </h1>
 
             <p
-              className={`text-sm mt-3 ${styles.subText}`}
+              className={`
+                text-sm
+                mt-3
+                ${styles.subText}
+              `}
             >
               Operational competency &
               compliance management
               platform.
             </p>
+
           </div>
 
           <div
@@ -400,44 +618,67 @@ export default function WisTrainingOG({
               flex items-center gap-2
               px-4 py-3
               rounded-2xl
-              border border-white/10
-              bg-white/5
+              border
               text-xs
               font-bold
               uppercase
               tracking-widest
               w-fit
+              border-slate-300
+              dark:border-slate-700
             "
           >
+
             <ShieldAlert size={14} />
 
             {isExecutive
               ? 'Executive Access'
               : 'Operator Access'}
+
           </div>
+
         </div>
 
         {/* FILTERS */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div
+          className="
+            flex
+            flex-col
+            gap-3
+          "
+        >
 
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest opacity-50">
+
             <Filter size={13} />
+
             Filter
+
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div
+            className="
+              flex
+              overflow-x-auto
+              gap-2
+              pb-2
+            "
+          >
 
             {filterTabs.map((tab) => {
+
               const isActive =
                 activeFilter === tab;
 
               return (
+
                 <button
                   key={tab}
                   onClick={() =>
                     setActiveFilter(tab)
                   }
                   className={`
+                    whitespace-nowrap
                     px-4 py-2.5
                     rounded-2xl
                     border
@@ -453,24 +694,24 @@ export default function WisTrainingOG({
                           text-slate-950
                           border-transparent
                         `
-                        : `
-                          border-white/10
-                          ${styles.filterButton}
-                        `
+                        : styles.filterButton
                     }
                   `}
                 >
                   {tab}
                 </button>
+
               );
+
             })}
 
           </div>
+
         </div>
 
-        {/* EMPTY */}
-        {filteredTrainings.length ===
-          0 && (
+        {/* LOADING */}
+        {loadingProgress && (
+
           <div
             className={`
               p-12
@@ -480,31 +721,61 @@ export default function WisTrainingOG({
               ${styles.card}
             `}
           >
+
+            <p className="text-sm opacity-60">
+              Loading training progress...
+            </p>
+
+          </div>
+
+        )}
+
+        {/* EMPTY */}
+        {!loadingProgress &&
+          filteredTrainings.length === 0 && (
+
+          <div
+            className={`
+              p-12
+              rounded-3xl
+              border
+              text-center
+              ${styles.card}
+            `}
+          >
+
             <p className="text-sm opacity-60">
               No trainings found under "
               {activeFilter}".
             </p>
+
           </div>
+
         )}
 
         {/* GRID */}
-        {filteredTrainings.length >
-          0 && (
+        {!loadingProgress &&
+          filteredTrainings.length > 0 && (
+
           <div
             className="
               grid
               grid-cols-1
               md:grid-cols-2
               xl:grid-cols-3
-              gap-6
+              gap-5
+              sm:gap-6
             "
           >
+
             {filteredTrainings.map(
               (training) => (
+
                 <div
                   key={training.id}
                   className={`
-                    p-6
+                    p-5
+                    sm:p-6
                     rounded-3xl
                     border
                     transition-all
@@ -515,10 +786,10 @@ export default function WisTrainingOG({
                     ${styles.card}
                   `}
                 >
+
                   {/* TOP */}
                   <div className="space-y-5">
 
-                    {/* STATUS */}
                     <div className="flex items-start justify-between gap-3">
 
                       <div className="flex items-center gap-2 flex-wrap">
@@ -528,9 +799,11 @@ export default function WisTrainingOG({
                         </span>
 
                         {training.isNew && (
+
                           <span className="px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 border border-amber-500/20">
                             New
                           </span>
+
                         )}
 
                       </div>
@@ -549,18 +822,28 @@ export default function WisTrainingOG({
                           )}
                         `}
                       >
+
                         {getStatusIcon(
                           training.status
                         )}
 
                         {training.status}
+
                       </div>
+
                     </div>
 
                     {/* TITLE */}
                     <div>
 
-                      <h3 className="text-base font-bold leading-relaxed min-h-[56px]">
+                      <h3
+                        className="
+                          text-base
+                          font-bold
+                          leading-relaxed
+                          min-h-[56px]
+                        "
+                      >
                         {training.title}
                       </h3>
 
@@ -583,22 +866,38 @@ export default function WisTrainingOG({
                           )}
                         `}
                       >
+
                         <ShieldCheck size={11} />
 
                         {training.severity}
+
                       </span>
 
                     </div>
+
                   </div>
 
                   {/* FOOTER */}
-                  <div className="mt-6 pt-5 border-t border-white/10 flex items-end justify-between gap-4">
+                  <div
+                    className="
+                      mt-6
+                      pt-5
+                      border-t
+                      border-slate-200
+                      dark:border-slate-800
+                      flex items-end justify-between
+                      gap-4
+                    "
+                  >
 
                     <div className="space-y-1">
 
                       <p className="text-[10px] uppercase tracking-widest opacity-50 font-bold flex items-center gap-1.5">
+
                         <Calendar size={10} />
+
                         Deadline
+
                       </p>
 
                       <p
@@ -614,10 +913,13 @@ export default function WisTrainingOG({
                           }
                         `}
                       >
+
                         {formatDate(
                           training.deadline
                         )}
+
                       </p>
+
                     </div>
 
                     <button
@@ -642,23 +944,44 @@ export default function WisTrainingOG({
                         shadow-amber-500/20
                       "
                     >
+
                       {training.status ===
-                      TRAINING_STATUS.TAKEN
-                        ? 'View Audit'
-                        : 'Start Audit'}
+                      TRAINING_STATUS.NOT_STARTED
+                        ? 'Start Audit'
+
+                        : training.status ===
+                          TRAINING_STATUS.SUBMITTED
+                        ? 'View Submission'
+
+                        : training.status ===
+                          TRAINING_STATUS.APPROVED
+                        ? 'View Report'
+
+                        : training.status ===
+                          TRAINING_STATUS.REJECTED
+                        ? 'Retake Audit'
+
+                        : 'Open'}
 
                       <ArrowUpRight
                         size={13}
                       />
+
                     </button>
 
                   </div>
+
                 </div>
+
               )
             )}
+
           </div>
+
         )}
+
       </div>
+
     </div>
   );
 }

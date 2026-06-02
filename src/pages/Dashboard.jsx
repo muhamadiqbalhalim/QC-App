@@ -22,6 +22,7 @@ import {
   Activity,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 
 import {
@@ -66,6 +67,12 @@ import MetaCards from '../components/dashboard/MetaCards';
 import RadarChartCard from '../components/dashboard/RadarChartCard';
 
 import ExecutiveApprovalPanel from '../components/dashboard/executive/ExecutiveApprovalPanel';
+
+import {
+  Card,
+  Button,
+  Badge,
+} from '../components/ui';
 
 export default function Dashboard({
   user: propUser,
@@ -113,51 +120,37 @@ export default function Dashboard({
    */
 
   const currentUser =
-    useMemo(() => {
+    propUser &&
+    Object.keys(propUser).length > 0
+      ? propUser
+      : getSession() || {};
 
-      if (
-        propUser &&
-        Object.keys(propUser).length > 0
-      ) {
+    /**
+     * =========================================================
+     * EXECUTIVE MODE
+     * =========================================================
+     */
 
-        return propUser;
-
-      }
-
-      return getSession() || {};
-
-    }, [
-      propUser,
-      getSession,
-    ]);
+    const executiveMode =
+      isExecutive(
+        currentUser.role
+      );
 
   /**
    * =========================================================
-   * EXECUTIVE MODE
+   * FETCH DATA
    * =========================================================
    */
 
-  const executiveMode =
-    isExecutive(
-      currentUser.role
-    );
+const fetchDashboardData = useCallback(
+  async () => {
 
-  /**
-   * =========================================================
-   * FETCH DASHBOARD DATA
-   * =========================================================
-   */
-
-  const fetchDashboardData =
-    useCallback(async () => {
-
-      if (
-        !currentUser?.employeeId
-      ) {
-
-        return;
-
-      }
+  if (
+    !currentUser?.employeeId
+  ) {
+    setLoading(false);
+    return;
+  }
 
       try {
 
@@ -259,10 +252,9 @@ export default function Dashboard({
 
       }
 
-    }, [
-      currentUser,
-      executiveMode,
-    ]);
+    }, 
+    [currentUser, executiveMode]
+  );
 
   /**
    * =========================================================
@@ -271,9 +263,7 @@ export default function Dashboard({
    */
 
   useEffect(() => {
-
     fetchDashboardData();
-
   }, [fetchDashboardData]);
 
   /**
@@ -348,7 +338,7 @@ export default function Dashboard({
 
   /**
    * =========================================================
-   * AVERAGE SCORE
+   * AVG SCORE
    * =========================================================
    */
 
@@ -556,10 +546,13 @@ export default function Dashboard({
         ClipboardCheck,
 
       label:
-        'Completed Trainings',
+        'Completed',
 
       value:
         completedTrainings.length,
+
+      variant:
+        'default',
     },
 
     {
@@ -567,10 +560,13 @@ export default function Dashboard({
         Activity,
 
       label:
-        'Completion Rate',
+        'Completion',
 
       value:
         `${completionPercentage}%`,
+
+      variant:
+        'primary',
     },
 
     {
@@ -578,33 +574,28 @@ export default function Dashboard({
         Award,
 
       label:
-        'Average Score',
+        'Avg Score',
 
       value:
         `${averageSkillScore}%`,
+
+      variant:
+        'success',
     },
 
-    executiveMode
-      ? {
-          icon:
-            ShieldCheck,
+    {
+      icon:
+        ShieldAlert,
 
-          label:
-            'Pending Approvals',
+      label:
+        'Pending',
 
-          value:
-            executivePendingApprovals.length,
-        }
-      : {
-          icon:
-            ShieldAlert,
+      value:
+        liveUrgentTrainings.length,
 
-          label:
-            'Critical Pending',
-
-          value:
-            liveUrgentTrainings.length,
-        },
+      variant:
+        'danger',
+    },
 
   ];
 
@@ -620,28 +611,6 @@ export default function Dashboard({
       ? 'bg-[#09090B] text-white'
       : 'bg-[#F8FAFC] text-slate-900',
 
-    card: darkMode
-      ? `
-        bg-zinc-900/80
-        border-zinc-800
-      `
-      : `
-        bg-white
-        border-slate-200
-      `,
-
-    toggleButton: darkMode
-      ? `
-        bg-zinc-900
-        border-zinc-800
-        text-amber-400
-      `
-      : `
-        bg-white
-        border-slate-200
-        text-slate-600
-      `,
-
   };
 
   /**
@@ -653,6 +622,7 @@ export default function Dashboard({
   if (loading) {
 
     return (
+
       <div
         className={`
           min-h-[70vh]
@@ -687,90 +657,76 @@ export default function Dashboard({
         </div>
 
       </div>
+
     );
+
   }
 
   return (
+
     <div
       className={`
         min-h-screen
         transition-all
         duration-500
-        relative
-        overflow-hidden
         ${styles.page}
       `}
     >
 
-      {/* BACKGROUND */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-
-        <div
-          className={`
-            absolute
-            top-[-15%]
-            left-[-10%]
-            w-[25rem]
-            h-[25rem]
-            rounded-full
-            blur-[100px]
-            opacity-10
-            ${
-              darkMode
-                ? 'bg-blue-700'
-                : 'bg-blue-300'
-            }
-          `}
-        />
-
-      </div>
-
-      {/* CONTENT */}
       <main
         className="
-          relative
-          z-10
           px-4
           py-5
           sm:px-5
           sm:py-6
-          md:px-6
-          md:py-8
-          lg:p-8
+          lg:px-8
+          lg:py-8
           space-y-5
           sm:space-y-6
           lg:space-y-8
         "
       >
 
+        {/* ================================================= */}
         {/* HEADER */}
+        {/* ================================================= */}
+
         <header
           className="
             flex
             flex-col
             gap-5
-            xl:flex-row
-            xl:items-center
-            xl:justify-between
+            lg:flex-row
+            lg:items-center
+            lg:justify-between
           "
         >
 
-          <div>
+          {/* LEFT */}
+          <div className="min-w-0">
 
-            <p
-              className="
-                text-xs
-                uppercase
-                tracking-[0.3em]
-                text-amber-500
-                font-black
-                mb-3
-              "
-            >
-              {executiveMode
-                ? 'Executive Control Center'
-                : 'QC Training Dashboard'}
-            </p>
+            <div className="flex items-center gap-2 mb-3">
+
+              <Sparkles
+                size={16}
+                className="text-amber-500"
+              />
+
+              <p
+                className="
+                  text-xs
+                  uppercase
+                  tracking-[0.15em]
+                  text-amber-500
+                  font-black
+                "
+              >
+                {executiveMode
+                  ? 'Executive Dashboard'
+                  : 'QC Training System'}
+              </p>
+
+            </div>
 
             <h1
               className="
@@ -782,171 +738,77 @@ export default function Dashboard({
                 break-words
               "
             >
-              Welcome back,
-              <br />
+
+              Welcome,
+              {' '}
 
               <span className="text-amber-500">
+
                 {currentUser.name ||
-                  'Staff'}
+                  'Operator'}
+
               </span>
+
             </h1>
 
           </div>
 
+          {/* RIGHT */}
           <div
             className="
               flex
-              flex-wrap
               items-center
               gap-3
+              flex-wrap
             "
           >
 
-            <div
-              className={`
-                px-4
-                py-3
-                sm:px-5
-                rounded-2xl
-                border
-                text-sm
-                font-bold
-                ${styles.card}
-              `}
+            <Badge
+              variant="warning"
+              size="lg"
             >
+
               {
                 ROLE_LABELS[
                   currentUser.role
                 ]
               }
-            </div>
 
-            <button
+            </Badge>
+
+            <Button
+              variant="secondary"
+              size="md"
               onClick={toggleTheme}
-              className={`
-                flex
-                items-center
-                gap-2
-                px-5
-                py-3
-                rounded-2xl
-                border
-                text-sm
-                font-bold
-                transition-all
-                ${styles.toggleButton}
-              `}
+              icon={
+                darkMode
+                  ? Sun
+                  : Moon
+              }
             >
 
-              {darkMode ? (
-                <>
-                  <Sun size={16} />
-                  Light
-                </>
-              ) : (
-                <>
-                  <Moon size={16} />
-                  Dark
-                </>
-              )}
+              {darkMode
+                ? 'Light'
+                : 'Dark'}
 
-            </button>
+            </Button>
 
           </div>
 
         </header>
 
-        {/* MOBILE QUICK STATUS */}
-        <div
-          className="
-            lg:hidden
-            sticky
-            top-[72px]
-            z-20
-          "
-        >
-
-          <div
-            className={`
-              rounded-2xl
-              border
-              px-4
-              py-3
-              flex
-              items-center
-              justify-between
-              backdrop-blur-xl
-              ${styles.card}
-            `}
-          >
-
-            <div>
-
-              <p
-                className="
-                  text-[10px]
-                  uppercase
-                  tracking-[0.25em]
-                  opacity-50
-                  font-black
-                  mb-1
-                "
-              >
-                Completion
-              </p>
-
-              <p
-                className="
-                  text-xl
-                  font-black
-                  text-emerald-500
-                "
-              >
-                {completionPercentage}%
-              </p>
-
-            </div>
-
-            <div className="text-right">
-
-              <p
-                className="
-                  text-[10px]
-                  uppercase
-                  tracking-[0.25em]
-                  opacity-50
-                  font-black
-                  mb-1
-                "
-              >
-                Avg Score
-              </p>
-
-              <p
-                className="
-                  text-xl
-                  font-black
-                  text-amber-500
-                "
-              >
-                {averageSkillScore}%
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-
+        {/* ================================================= */}
         {/* META */}
+        {/* ================================================= */}
+
         <section
           className="
             grid
             grid-cols-1
-            md:grid-cols-2
+            sm:grid-cols-2
             xl:grid-cols-3
             gap-4
-            lg:gap-6
+            lg:gap-5
           "
         >
 
@@ -973,99 +835,103 @@ export default function Dashboard({
 
         </section>
 
-        {/* KPI */}
-        <section
-          className="
-            grid
-            grid-cols-2
-            xl:grid-cols-4
-            gap-3
-            sm:gap-4
-            lg:gap-6
-          "
-        >
+        {/* ================================================= */}
+        {/* EXECUTIVE */}
+        {/* ================================================= */}
 
-          {kpiCards.map((card) => {
+        {executiveMode && (
 
-            const Icon =
-              card.icon;
+          <>
 
-            return (
+            {/* SUMMARY */}
+            <Card
+              darkMode={darkMode}
+              hover
+            >
 
               <div
-                key={card.label}
-                className={`
-                  rounded-3xl
-                  border
-                  p-4
-                  sm:p-5
-                  lg:p-6
-                  min-h-[150px]
-                  ${styles.card}
-                `}
+                className="
+                  flex
+                  flex-col
+                  sm:flex-row
+                  sm:items-center
+                  sm:justify-between
+                  gap-5
+                "
               >
 
-                <div className="flex items-start justify-between gap-3">
+                <div>
 
-                  <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-3">
+
+                    <ShieldCheck
+                      size={16}
+                      className="text-amber-500"
+                    />
 
                     <p
                       className="
-                        text-[10px]
-                        sm:text-xs
+                        text-xs
                         uppercase
-                        tracking-[0.25em]
-                        opacity-50
+                        tracking-[0.15em]
+                        text-amber-500
                         font-black
-                        leading-5
                       "
                     >
-                      {card.label}
+                      Pending Reviews
                     </p>
 
-                    <h2
-                      className="
-                        mt-4
-                        text-2xl
-                        sm:text-3xl
-                        lg:text-4xl
-                        font-black
-                        break-words
-                      "
-                    >
-                      {card.value}
-                    </h2>
-
                   </div>
 
-                  <div
+                  <h2
                     className="
-                      p-3
-                      sm:p-4
-                      rounded-2xl
-                      bg-amber-500/10
-                      text-amber-500
-                      shrink-0
+                      text-5xl
+                      font-black
                     "
                   >
-                    <Icon size={22} />
-                  </div>
+                    {
+                      executivePendingApprovals.length
+                    }
+                  </h2>
+
+                  <p className="text-sm opacity-60 mt-3">
+                    Awaiting executive validation
+                  </p>
+
+                </div>
+
+                <div
+                  className="
+                    flex
+                    flex-wrap
+                    gap-3
+                  "
+                >
+
+                  <Badge
+                    variant={
+                      executivePendingApprovals.length > 0
+                        ? 'danger'
+                        : 'success'
+                    }
+                    size="lg"
+                  >
+
+                    {
+                      executivePendingApprovals.length > 0
+                        ? 'Action Required'
+                        : 'All Clear'
+                    }
+
+                  </Badge>
 
                 </div>
 
               </div>
 
-            );
+            </Card>
 
-          })}
-
-        </section>
-
-        {/* EXECUTIVE */}
-        {executiveMode && (
-
-          <div className="overflow-hidden">
-
+            {/* APPROVAL PANEL */}
             <ExecutiveApprovalPanel
               submissions={
                 executivePendingApprovals
@@ -1075,209 +941,351 @@ export default function Dashboard({
               onReject={handleReject}
             />
 
-          </div>
+          </>
 
         )}
 
-        {/* MAIN GRID */}
-        <section
-          className="
-            grid
-            grid-cols-1
-            xl:grid-cols-3
-            gap-4
-            lg:gap-6
-          "
-        >
+        {/* ================================================= */}
+        {/* OPERATOR */}
+        {/* ================================================= */}
 
-          {/* RADAR */}
-          <div
-            className={`
-              xl:col-span-2
-              rounded-3xl
-              border
-              p-4
-              sm:p-5
-              lg:p-6
-              overflow-hidden
-              ${styles.card}
-            `}
-          >
+        {!executiveMode && (
 
-            <RadarChartCard
-              skills={radarSkills}
-              darkMode={darkMode}
-            />
+          <>
 
-          </div>
+            {/* KPI */}
+            <section
+              className="
+                grid
+                grid-cols-2
+                xl:grid-cols-4
+                gap-3
+                sm:gap-4
+                lg:gap-5
+              "
+            >
 
-          {/* TRAININGS */}
-          <div
-            className={`
-              rounded-3xl
-              border
-              p-4
-              sm:p-5
-              lg:p-6
-              ${styles.card}
-            `}
-          >
+              {kpiCards.map((card) => {
 
-            <div className="mb-6">
+                const Icon =
+                  card.icon;
 
-              <div className="flex items-center gap-2 mb-3">
+                return (
 
-                <AlertTriangle
-                  size={16}
-                  className="text-amber-500"
-                />
-
-                <p
-                  className="
-                    text-xs
-                    uppercase
-                    tracking-[0.3em]
-                    text-amber-500
-                    font-black
-                  "
-                >
-                  Action Required
-                </p>
-
-              </div>
-
-              <h2
-                className="
-                  text-xl
-                  sm:text-2xl
-                  font-black
-                "
-              >
-                Pending Trainings
-              </h2>
-
-            </div>
-
-            <div className="space-y-4">
-
-              {liveUrgentTrainings.map(
-                (training) => {
-
-                  const severityColor =
-                    getSeverityColor(
-                      training.severity
-                    );
-
-                  return (
+                  <Card
+                    key={card.label}
+                    darkMode={darkMode}
+                    hover
+                    className={`
+                      min-h-[150px]
+                      relative
+                      overflow-hidden
+                    `}
+                  >
 
                     <div
-                      key={training.id}
-                      className={`
-                        p-4
-                        sm:p-5
-                        rounded-2xl
-                        border
-                        ${styles.card}
-                      `}
+                      className="
+                        flex
+                        items-start
+                        justify-between
+                        gap-3
+                        relative
+                        z-10
+                      "
                     >
 
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="min-w-0">
 
-                        <div className="min-w-0">
-
-                          <p
-                            className="
-                              font-bold
-                              text-sm
-                              break-words
-                            "
-                          >
-                            {training.title}
-                          </p>
-
-                          <div className="flex items-center gap-2 mt-2">
-
-                            <span
-                              className={`
-                                text-[10px]
-                                px-2
-                                py-1
-                                rounded-full
-                                uppercase
-                                tracking-widest
-                                font-bold
-                                border
-                                ${severityColor.bg}
-                                ${severityColor.text}
-                                ${severityColor.border}
-                              `}
-                            >
-                              {training.severity}
-                            </span>
-
-                          </div>
-
-                        </div>
-
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/registration/${training.id}`
-                            )
-                          }
+                        <p
                           className="
-                            p-2.5
-                            rounded-xl
-                            hover:text-amber-500
-                            transition-all
-                            shrink-0
+                            text-xs
+                            uppercase
+                            tracking-[0.15em]
+                            opacity-50
+                            font-black
                           "
                         >
+                          {card.label}
+                        </p>
 
-                          <ArrowUpRight
-                            size={16}
-                          />
+                        <h2
+                          className="
+                            mt-5
+                            text-3xl
+                            lg:text-4xl
+                            font-black
+                            break-words
+                          "
+                        >
+                          {card.value}
+                        </h2>
 
-                        </button>
+                      </div>
+
+                      <div
+                        className="
+                          p-3
+                          rounded-2xl
+                          bg-amber-500/10
+                          text-amber-500
+                          shrink-0
+                        "
+                      >
+
+                        <Icon size={22} />
 
                       </div>
 
                     </div>
 
-                  );
+                  </Card>
 
-                }
-              )}
+                );
 
-              {!liveUrgentTrainings.length && (
+              })}
 
-                <div className="text-center py-10 opacity-60">
+            </section>
 
-                  <CheckCircle2
-                    size={32}
+            {/* MAIN CONTENT */}
+            <section
+              className="
+                grid
+                grid-cols-1
+                xl:grid-cols-3
+                gap-4
+                lg:gap-5
+              "
+            >
+
+              {/* RADAR */}
+              <Card
+                darkMode={darkMode}
+                className="
+                  xl:col-span-2
+                  overflow-hidden
+                "
+              >
+
+                <RadarChartCard
+                  skills={radarSkills}
+                  darkMode={darkMode}
+                />
+
+              </Card>
+
+              {/* PENDING */}
+              <Card
+                darkMode={darkMode}
+              >
+
+                <div className="mb-5">
+
+                  <div className="flex items-center gap-2 mb-3">
+
+                    <AlertTriangle
+                      size={16}
+                      className="text-amber-500"
+                    />
+
+                    <p
+                      className="
+                        text-xs
+                        uppercase
+                        tracking-[0.15em]
+                        text-amber-500
+                        font-black
+                      "
+                    >
+                      Pending Trainings
+                    </p>
+
+                  </div>
+
+                  <h2
                     className="
-                      mx-auto
-                      mb-4
-                      text-emerald-500
+                      text-2xl
+                      font-black
                     "
-                  />
-
-                  <p className="text-sm">
-                    No urgent trainings.
-                  </p>
+                  >
+                    Action Required
+                  </h2>
 
                 </div>
 
-              )}
+                <div className="space-y-4">
 
-            </div>
+                  {liveUrgentTrainings.map(
+                    (training) => {
 
-          </div>
+                      const severityColor =
+                        getSeverityColor(
+                          training.severity
+                        );
 
-        </section>
+                      return (
+
+                        <button
+                          key={training.id}
+                          onClick={() =>
+                            navigate(
+                              `/registration/${training.id}`
+                            )
+                          }
+                          className={`
+                            w-full
+                            text-left
+                            p-4
+                            rounded-2xl
+                            border
+                            transition-all
+                            duration-300
+                            hover:-translate-y-1
+                            hover:border-amber-500/30
+                            ${
+                              darkMode
+                                ? `
+                                  border-zinc-800
+                                  bg-zinc-950/40
+                                `
+                                : `
+                                  border-slate-200
+                                  bg-slate-50
+                                `
+                            }
+                          `}
+                        >
+
+                          <div
+                            className="
+                              flex
+                              items-center
+                              justify-between
+                              gap-4
+                            "
+                          >
+
+                            <div className="min-w-0">
+
+                              <p
+                                className="
+                                  font-bold
+                                  text-sm
+                                  sm:text-base
+                                  break-words
+                                  leading-6
+                                "
+                              >
+                                {training.title}
+                              </p>
+
+                              <div className="mt-3">
+
+                                <span
+                                  className={`
+                                    inline-flex
+                                    items-center
+                                    rounded-full
+                                    border
+                                    px-3
+                                    py-1.5
+                                    text-[11px]
+                                    uppercase
+                                    font-black
+                                    tracking-wide
+                                    ${severityColor.bg}
+                                    ${severityColor.text}
+                                    ${severityColor.border}
+                                  `}
+                                >
+                                  {
+                                    training.severity
+                                  }
+                                </span>
+
+                              </div>
+
+                            </div>
+
+                            <div
+                              className="
+                                flex
+                                items-center
+                                gap-2
+                                shrink-0
+                                text-amber-500
+                                font-black
+                                text-sm
+                              "
+                            >
+
+                              Start
+
+                              <ArrowUpRight
+                                size={18}
+                              />
+
+                            </div>
+
+                          </div>
+
+                        </button>
+
+                      );
+
+                    }
+                  )}
+
+                  {!liveUrgentTrainings.length && (
+
+                    <div
+                      className="
+                        text-center
+                        py-10
+                        opacity-70
+                      "
+                    >
+
+                      <CheckCircle2
+                        size={36}
+                        className="
+                          mx-auto
+                          mb-4
+                          text-emerald-500
+                        "
+                      />
+
+                      <h3
+                        className="
+                          font-black
+                          text-lg
+                          mb-2
+                        "
+                      >
+                        All Trainings Completed
+                      </h3>
+
+                      <p className="text-sm">
+                        No urgent training pending.
+                      </p>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              </Card>
+
+            </section>
+
+          </>
+
+        )}
 
       </main>
 
     </div>
+
   );
+
 }

@@ -5,9 +5,10 @@ import React, {
 import {
   ArrowLeftRight,
   ClipboardCheck,
-  LayoutGrid,
   ShieldAlert,
   Activity,
+  Eye,
+  CheckCircle2,
 } from 'lucide-react';
 
 import InspectionTable from '../shared/InspectionTable';
@@ -33,7 +34,17 @@ export default function DynamicFormEngine({
   formData,
   handleInspectionChange,
   activeTab,
+  readOnly = false,
 }) {
+
+  /**
+   * ======================================================
+   * EXECUTIVE REVIEW MODE
+   * ======================================================
+   */
+
+  const executiveReviewMode =
+    readOnly;
 
   /**
    * ======================================================
@@ -192,9 +203,9 @@ export default function DynamicFormEngine({
               leading-7
             "
           >
-            No inspection schema has been
-            connected to this training
-            module yet.
+            No inspection dataset has
+            been configured for this
+            training module yet.
           </p>
 
         </div>
@@ -225,100 +236,101 @@ export default function DynamicFormEngine({
       {/* MOBILE STICKY SUMMARY */}
       {/* ================================================== */}
 
-      <div
-        className="
-          sticky
-          top-[72px]
-          z-20
-          lg:hidden
-        "
-      >
+      {!executiveReviewMode && (
 
         <div
           className="
-            flex
-            items-center
-            justify-between
-            gap-4
-            px-4
-            py-3
-            rounded-2xl
-            border
-            border-white/10
-            bg-white/90
-            dark:bg-[#09090B]/90
-            backdrop-blur-xl
-            shadow-lg
+            sticky
+            top-[72px]
+            z-20
+            lg:hidden
           "
         >
 
-          {/* LEFT */}
-          <div>
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+              gap-4
+              px-4
+              py-4
+              rounded-2xl
+              border
+              border-slate-200
+              dark:border-white/10
+              bg-white/95
+              dark:bg-[#09090B]/95
+              backdrop-blur-xl
+              shadow-lg
+            "
+          >
 
-            <p
-              className="
-                text-[10px]
-                uppercase
-                tracking-[0.25em]
-                font-black
-                text-amber-500
-                mb-1
-              "
-            >
-              Active Zone
-            </p>
+            {/* LEFT */}
+            <div>
 
-            <div className="flex items-center gap-2">
-
-              <ArrowLeftRight
-                size={14}
-                className="text-amber-500"
-              />
-
-              <span
+              <p
                 className="
-                  text-sm
-                  font-black
+                  text-xs
+                  font-semibold
+                  opacity-60
+                  mb-1
                 "
               >
-                {activeTab}
-              </span>
+                Current Section
+              </p>
+
+              <div className="flex items-center gap-2">
+
+                <ArrowLeftRight
+                  size={16}
+                  className="text-amber-500"
+                />
+
+                <span
+                  className="
+                    text-base
+                    font-black
+                  "
+                >
+                  {activeTab}
+                </span>
+
+              </div>
+
+            </div>
+
+            {/* RIGHT */}
+            <div className="text-right">
+
+              <p
+                className="
+                  text-xs
+                  font-semibold
+                  opacity-60
+                  mb-1
+                "
+              >
+                Progress
+              </p>
+
+              <p
+                className="
+                  text-xl
+                  font-black
+                  text-emerald-500
+                "
+              >
+                {completionPercentage}%
+              </p>
 
             </div>
 
           </div>
 
-          {/* RIGHT */}
-          <div className="text-right">
-
-            <p
-              className="
-                text-[10px]
-                uppercase
-                tracking-[0.25em]
-                opacity-50
-                font-black
-                mb-1
-              "
-            >
-              Progress
-            </p>
-
-            <p
-              className="
-                text-lg
-                font-black
-                text-emerald-500
-              "
-            >
-              {completionPercentage}%
-            </p>
-
-          </div>
-
         </div>
 
-      </div>
+      )}
 
       {/* ================================================== */}
       {/* ENGINE HEADER */}
@@ -343,37 +355,122 @@ export default function DynamicFormEngine({
           className="
             flex
             flex-col
-            2xl:flex-row
-            2xl:items-start
-            2xl:justify-between
+            xl:flex-row
+            xl:items-start
+            xl:justify-between
             gap-6
           "
         >
+
+          {/* WIS INFORMATION */}
+
+          <div
+            className="
+              p-5
+              sm:p-6
+              rounded-3xl
+              border
+              border-slate-200
+              dark:border-white/10
+              bg-white
+              dark:bg-white/5
+              shadow-sm
+            "
+          >
+
+            <div className="mb-5">
+
+              <p
+                className="
+                  text-sm
+                  font-bold
+                  text-amber-500
+                  mb-2
+                "
+              >
+                WIS INFORMATION
+              </p>
+
+              <h3
+                className="
+                  text-xl
+                  font-black
+                "
+              >
+                {trainingConfig?.title}
+              </h3>
+
+            </div>
+
+            <div
+              className="
+                grid
+                grid-cols-2
+                lg:grid-cols-4
+                gap-4
+              "
+            >
+
+              <InfoCard
+                label="Model"
+                value={trainingConfig?.model}
+              />
+
+              <InfoCard
+                label="Part No"
+                value={trainingConfig?.partNo}
+              />
+
+              <InfoCard
+                label="Line"
+                value={trainingConfig?.lineNo}
+              />
+
+              <InfoCard
+                label="Cycle Time"
+                value={trainingConfig?.cycleTime}
+              />
+
+            </div>
+
+          </div>
 
           {/* ================================================= */}
           {/* LEFT */}
           {/* ================================================= */}
 
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
 
             <div className="flex items-center gap-2 mb-3">
 
-              <LayoutGrid
-                size={16}
-                className="text-amber-500"
-              />
+              {executiveReviewMode ? (
+
+                <Eye
+                  size={16}
+                  className="text-blue-500"
+                />
+
+              ) : (
+
+                <ClipboardCheck
+                  size={16}
+                  className="text-amber-500"
+                />
+
+              )}
 
               <p
                 className="
-                  text-[10px]
-                  sm:text-xs
-                  uppercase
-                  tracking-[0.3em]
-                  font-black
+                  text-sm
+                  font-bold
                   text-amber-500
                 "
               >
-                Dynamic Inspection Engine
+                {
+                  executiveReviewMode
+                    ? 'Executive Review'
+                    : 'Inspection Section'
+                }
               </p>
 
             </div>
@@ -396,17 +493,48 @@ export default function DynamicFormEngine({
               className="
                 text-sm
                 opacity-60
-                mt-4
-                max-w-3xl
+                mt-3
                 leading-7
+                max-w-2xl
               "
             >
-              Structured operational
-              inspection workflow and
-              competency validation
-              system for manufacturing
-              quality assurance.
+              {
+                executiveReviewMode
+                  ? `
+                    Review and validate submitted inspection results before approval.
+                  `
+                  : `
+                    Complete all inspection points for this section before submission.
+                  `
+              }
             </p>
+
+            {/* REVIEW MODE BADGE */}
+            {executiveReviewMode && (
+
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  px-4
+                  py-2
+                  rounded-2xl
+                  bg-blue-500/10
+                  text-blue-500
+                  border
+                  border-blue-500/20
+                  text-xs
+                  font-bold
+                  mt-4
+                "
+              >
+
+                Executive Review Mode
+
+              </div>
+
+            )}
 
           </div>
 
@@ -418,14 +546,14 @@ export default function DynamicFormEngine({
             className="
               grid
               grid-cols-2
-              md:grid-cols-4
               gap-3
               w-full
-              2xl:w-auto
+              xl:w-auto
+              xl:min-w-[320px]
             "
           >
 
-            {/* TRAINING */}
+            {/* ACTIVE ZONE */}
             <div
               className="
                 p-4
@@ -435,7 +563,7 @@ export default function DynamicFormEngine({
                 dark:border-white/10
                 bg-slate-50
                 dark:bg-black/20
-                min-h-[110px]
+                min-h-[90px]
                 flex
                 flex-col
                 justify-between
@@ -446,61 +574,10 @@ export default function DynamicFormEngine({
 
                 <p
                   className="
-                    text-[10px]
-                    uppercase
-                    tracking-widest
+                    text-xs
+                    font-semibold
                     opacity-50
                     mb-3
-                    font-black
-                  "
-                >
-                  Training ID
-                </p>
-
-                <p
-                  className="
-                    font-mono
-                    text-sm
-                    sm:text-base
-                    font-black
-                    text-amber-500
-                    break-words
-                  "
-                >
-                  {trainingId}
-                </p>
-
-              </div>
-
-            </div>
-
-            {/* ACTIVE */}
-            <div
-              className="
-                p-4
-                rounded-2xl
-                border
-                border-slate-200
-                dark:border-white/10
-                bg-slate-50
-                dark:bg-black/20
-                min-h-[110px]
-                flex
-                flex-col
-                justify-between
-              "
-            >
-
-              <div>
-
-                <p
-                  className="
-                    text-[10px]
-                    uppercase
-                    tracking-widest
-                    opacity-50
-                    mb-3
-                    font-black
                   "
                 >
                   Active Zone
@@ -509,7 +586,7 @@ export default function DynamicFormEngine({
                 <div className="flex items-center gap-2">
 
                   <ArrowLeftRight
-                    size={14}
+                    size={15}
                     className="
                       text-amber-500
                     "
@@ -517,8 +594,7 @@ export default function DynamicFormEngine({
 
                   <p
                     className="
-                      text-sm
-                      sm:text-base
+                      text-base
                       font-black
                     "
                   >
@@ -541,7 +617,7 @@ export default function DynamicFormEngine({
                 dark:border-white/10
                 bg-slate-50
                 dark:bg-black/20
-                min-h-[110px]
+                min-h-[90px]
                 flex
                 flex-col
                 justify-between
@@ -552,12 +628,10 @@ export default function DynamicFormEngine({
 
                 <p
                   className="
-                    text-[10px]
-                    uppercase
-                    tracking-widest
+                    text-xs
+                    font-semibold
                     opacity-50
                     mb-3
-                    font-black
                   "
                 >
                   Severity
@@ -566,7 +640,7 @@ export default function DynamicFormEngine({
                 <div className="flex items-center gap-2">
 
                   <ShieldAlert
-                    size={14}
+                    size={15}
                     className="
                       text-red-500
                     "
@@ -574,8 +648,7 @@ export default function DynamicFormEngine({
 
                   <p
                     className="
-                      text-sm
-                      sm:text-base
+                      text-base
                       font-black
                     "
                   >
@@ -590,71 +663,97 @@ export default function DynamicFormEngine({
 
             </div>
 
-            {/* PROGRESS */}
-            <div
-              className="
-                p-4
-                rounded-2xl
-                border
-                border-slate-200
-                dark:border-white/10
-                bg-slate-50
-                dark:bg-black/20
-                min-h-[110px]
-                flex
-                flex-col
-                justify-between
-              "
-            >
+            {/* COMPLETION */}
+            {!executiveReviewMode && (
 
-              <div>
+              <div
+                className="
+                  col-span-2
+                  p-4
+                  rounded-2xl
+                  border
+                  border-slate-200
+                  dark:border-white/10
+                  bg-slate-50
+                  dark:bg-black/20
+                  min-h-[90px]
+                "
+              >
 
-                <p
-                  className="
-                    text-[10px]
-                    uppercase
-                    tracking-widest
-                    opacity-50
-                    mb-3
-                    font-black
-                  "
-                >
-                  Completion
-                </p>
+                <div className="flex items-center justify-between gap-3">
 
-                <div className="flex items-center gap-2">
+                  <div>
 
-                  <Activity
-                    size={14}
+                    <p
+                      className="
+                        text-xs
+                        font-semibold
+                        opacity-50
+                        mb-2
+                      "
+                    >
+                      Inspection Progress
+                    </p>
+
+                    <div className="flex items-center gap-2">
+
+                      <Activity
+                        size={15}
+                        className="
+                          text-emerald-500
+                        "
+                      />
+
+                      <p
+                        className="
+                          text-base
+                          font-black
+                          text-emerald-500
+                        "
+                      >
+                        {
+                          completedInspections
+                        }
+                        /
+                        {
+                          totalInspectionRows
+                        }
+                        {' '}
+                        completed
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  <div
                     className="
-                      text-emerald-500
-                    "
-                  />
-
-                  <p
-                    className="
-                      text-sm
-                      sm:text-base
-                      font-black
-                      text-emerald-500
+                      text-right
                     "
                   >
-                    {
-                      completedInspections
-                    }
-                    /
-                    {
-                      totalInspectionRows
-                    }
-                  </p>
+
+                    <p
+                      className="
+                        text-2xl
+                        font-black
+                        text-emerald-500
+                      "
+                    >
+                      {
+                        completionPercentage
+                      }
+                      %
+                    </p>
+
+                  </div>
 
                 </div>
 
                 {/* PROGRESS BAR */}
                 <div
                   className="
-                    mt-3
-                    h-2
+                    mt-4
+                    h-2.5
                     rounded-full
                     overflow-hidden
                     bg-slate-200
@@ -680,13 +779,67 @@ export default function DynamicFormEngine({
 
               </div>
 
-            </div>
+            )}
 
           </div>
 
         </div>
 
       </div>
+
+      {/* ================================================== */}
+      {/* COMPLETED STATE */}
+      {/* ================================================== */}
+
+      {!executiveReviewMode &&
+        completionPercentage === 100 && (
+
+        <div
+          className="
+            p-5
+            rounded-3xl
+            border
+            border-emerald-500/20
+            bg-emerald-500/10
+            text-emerald-500
+          "
+        >
+
+          <div className="flex items-start gap-4">
+
+            <CheckCircle2
+              size={22}
+              className="shrink-0"
+            />
+
+            <div>
+
+              <h3
+                className="
+                  text-lg
+                  font-black
+                  mb-2
+                "
+              >
+                Inspection Completed
+              </h3>
+
+              <p className="text-sm opacity-80">
+
+                All inspection points for
+                this section have been completed.
+                You may continue to the next
+                section or submit for executive review.
+
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
 
       {/* ================================================== */}
       {/* INSPECTION TABLE */}
@@ -696,6 +849,7 @@ export default function DynamicFormEngine({
         section={
           activeInspectionSection
         }
+        readOnly={readOnly}
         activeTab={activeTab}
         formData={formData}
         handleInputChange={
@@ -705,4 +859,47 @@ export default function DynamicFormEngine({
 
     </div>
   );
+}
+
+function InfoCard({
+  label,
+  value,
+}) {
+
+  return (
+
+    <div
+      className="
+        p-4
+        rounded-2xl
+        border
+        border-slate-200
+        dark:border-white/10
+      "
+    >
+
+      <p
+        className="
+          text-xs
+          font-semibold
+          opacity-50
+          mb-2
+        "
+      >
+        {label}
+      </p>
+
+      <p
+        className="
+          text-base
+          font-black
+        "
+      >
+        {value || '-'}
+      </p>
+
+    </div>
+
+  );
+
 }

@@ -3,34 +3,40 @@ import React, {
   useState,
 } from 'react';
 
-import { NavLink } from 'react-router-dom';
+import {
+  NavLink,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 
 import {
-  ShieldCheck,
   LayoutDashboard,
-  Database,
-  FileText,
-  ChevronRight,
-  ChevronDown,
+  ShieldCheck,
+  BookOpen,
   LogOut,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Shield,
-  Users,
-  BarChart3,
+  X,
+  Menu,
+  Sparkles,
+  UserCircle2,
 } from 'lucide-react';
 
-import { useTheme } from '../../context/ThemeContext';
-
-import { FORM_REGISTRY } from '../../config/FormRegistry';
+import {
+  useTheme,
+} from '../../context/ThemeContext';
 
 import useSession from '../../hooks/useSession';
 
-import { ROLES } from '../../config/constants/roles';
+import {
+  ROLE_LABELS,
+  isExecutive,
+} from '../../config/constants/roles';
 
-export default function Sidebar({
-  onLogout,
-}) {
+import {
+  Button,
+  Badge,
+} from '../ui';
+
+export default function Sidebar() {
 
   /**
    * =========================================================
@@ -38,24 +44,19 @@ export default function Sidebar({
    * =========================================================
    */
 
+  const navigate =
+    useNavigate();
+
+  const location =
+    useLocation();
+
   const { darkMode } =
     useTheme();
 
-  const { getSession } =
-    useSession();
-
-  /**
-   * =========================================================
-   * USER
-   * =========================================================
-   */
-
-  const currentUser =
-    getSession();
-
-  const userRole =
-    currentUser?.role ||
-    ROLES.OPERATOR;
+  const {
+    getSession,
+    clearSession,
+  } = useSession();
 
   /**
    * =========================================================
@@ -64,14 +65,25 @@ export default function Sidebar({
    */
 
   const [
-    isCollapsed,
-    setIsCollapsed,
+    mobileOpen,
+    setMobileOpen,
   ] = useState(false);
 
-  const [
-    isFormOpen,
-    setIsFormOpen,
-  ] = useState(true);
+  /**
+   * =========================================================
+   * USER
+   * =========================================================
+   */
+
+  const currentUser =
+  useMemo(() => {
+    return getSession();
+  }, [getSession]);
+
+  const executiveMode =
+    isExecutive(
+      currentUser?.role
+    );
 
   /**
    * =========================================================
@@ -81,833 +93,557 @@ export default function Sidebar({
 
   const styles = {
 
-    active: `
-      w-full
-      flex
-      items-center
-      justify-between
-      min-h-[56px]
-      px-4
-      py-3.5
-      rounded-2xl
-      text-sm
-      font-semibold
-      border
-      transition-all
-      duration-300
+    sidebar: darkMode
+      ? `
+        bg-[#09090B]
+        border-zinc-800
+        text-white
+      `
+      : `
+        bg-white
+        border-slate-200
+        text-slate-900
+      `,
+
+    navItem: darkMode
+      ? `
+        hover:bg-zinc-800/70
+      `
+      : `
+        hover:bg-slate-100
+      `,
+
+    activeItem: `
+      bg-amber-500
+      text-slate-950
       shadow-lg
-      ${
-        darkMode
-          ? `
-            bg-white/10
-            border-white/10
-            text-amber-400
-            backdrop-blur-xl
-          `
-          : `
-            bg-white
-            border-slate-200
-            text-slate-900
-          `
-      }
-    `,
-
-    inactive: `
-      w-full
-      flex
-      items-center
-      justify-between
-      min-h-[56px]
-      px-4
-      py-3.5
-      rounded-2xl
-      text-sm
-      transition-all
-      duration-300
-      ${
-        darkMode
-          ? `
-            text-slate-400
-            hover:bg-white/5
-            hover:text-white
-          `
-          : `
-            text-slate-600
-            hover:bg-slate-100
-            hover:text-slate-900
-          `
-      }
-    `,
-
-    subActive: `
-      w-full
-      flex
-      items-center
-      gap-3
-      min-h-[52px]
-      px-4
-      py-3
-      rounded-2xl
-      text-xs
-      font-semibold
-      border
-      transition-all
-      duration-300
-      ${
-        darkMode
-          ? `
-            bg-amber-500/10
-            border-amber-500/20
-            text-amber-400
-          `
-          : `
-            bg-amber-100
-            border-amber-200
-            text-amber-700
-          `
-      }
-    `,
-
-    subInactive: `
-      w-full
-      flex
-      items-center
-      gap-3
-      min-h-[52px]
-      px-4
-      py-3
-      rounded-2xl
-      text-xs
-      transition-all
-      duration-300
-      ${
-        darkMode
-          ? `
-            text-slate-500
-            hover:bg-white/5
-            hover:text-slate-200
-          `
-          : `
-            text-slate-500
-            hover:bg-slate-100
-            hover:text-slate-900
-          `
-      }
+      shadow-amber-500/20
     `,
 
   };
 
   /**
    * =========================================================
-   * MAIN MENUS
+   * NAVIGATION
    * =========================================================
    */
 
-  const mainMenus =
-    useMemo(() => {
+  const operatorNavigation =
+    useMemo(() => [
 
-      const baseMenus = [
+      {
+        label:
+          'Dashboard',
 
-        {
-          label:
-            'Dashboard',
+        icon:
+          LayoutDashboard,
 
-          icon:
-            LayoutDashboard,
+        path:
+          '/dashboard',
+      },
 
-          path:
-            '/dashboard',
-        },
+      {
+        label:
+          'WIS Training Registry',
 
-      ];
+        icon:
+          BookOpen,
 
-      if (
-        userRole === ROLES.ADMIN
-      ) {
+        path:
+          '/training-og',
+      },
 
-        baseMenus.push(
+    ], []);
 
-          {
-            label:
-              'Analytics',
+  const executiveNavigation =
+    useMemo(() => [
 
-            icon:
-              BarChart3,
+      {
+        label:
+          'Dashboard',
 
-            path:
-              '/analytics',
-          },
+        icon:
+          LayoutDashboard,
 
-          {
-            label:
-              'User Management',
+        path:
+          '/dashboard',
+      },
 
-            icon:
-              Users,
+      {
+        label:
+          'Review Submission',
 
-            path:
-              '/users',
-          }
+        icon:
+          ShieldCheck,
 
-        );
+        path:
+          '/review-form',
+      },
 
-      }
-
-      return baseMenus;
-
-    }, [userRole]);
+    ], []);
 
   /**
    * =========================================================
-   * AVAILABLE FORMS
+   * ACTIVE CHECK
    * =========================================================
    */
 
-  const availableForms =
-    useMemo(() => {
+  const isActive =
+    (path) => {
 
-      return Object.entries(
-        FORM_REGISTRY
-      ).filter(([, config]) => {
-
-        if (
-          !config.allowedRoles
-        ) {
-
-          return true;
-
-        }
-
-        return config.allowedRoles.includes(
-          userRole
-        );
-
-      });
-
-    }, [userRole]);
-
-  /**
-   * =========================================================
-   * MAIN NAV
-   * =========================================================
-   */
-
-  const renderMainNav = ({
-    label,
-    icon: Icon,
-    path,
-  }) => (
-
-    <NavLink
-      key={path}
-      to={path}
-      className={({ isActive }) =>
-        isActive
-          ? styles.active
-          : styles.inactive
-      }
-    >
-
-      <div className="flex items-center gap-4 min-w-0">
-
-        <Icon
-          className="
-            w-5
-            h-5
-            shrink-0
-          "
-        />
-
-        {!isCollapsed && (
-
-          <span className="truncate">
-            {label}
-          </span>
-
-        )}
-
-      </div>
-
-      {!isCollapsed && (
-
-        <ChevronRight
-          className="
-            w-4
-            h-4
-            opacity-40
-            shrink-0
-          "
-        />
-
-      )}
-
-    </NavLink>
-
-  );
-
-  /**
-   * =========================================================
-   * FORM LINKS
-   * =========================================================
-   */
-
-  const renderFormLinks =
-    () => {
-
-      return availableForms.map(
-        ([id, config]) => (
-
-          <NavLink
-            key={id}
-            to={`/registration/${id}`}
-            className={({ isActive }) =>
-              isActive
-                ? styles.subActive
-                : styles.subInactive
-            }
-          >
-
-            <span
-              className={`
-                w-2.5
-                h-2.5
-                rounded-full
-                shrink-0
-                ${
-                  config.severity ===
-                  'Critical'
-                    ? 'bg-red-500'
-                    : config.severity ===
-                      'High'
-                    ? 'bg-amber-500'
-                    : 'bg-slate-400'
-                }
-              `}
-            />
-
-            {!isCollapsed && (
-
-              <div className="overflow-hidden min-w-0">
-
-                <p className="truncate font-semibold">
-                  {config.title}
-                </p>
-
-                <p
-                  className="
-                    truncate
-                    text-[10px]
-                    opacity-50
-                    mt-1
-                  "
-                >
-                  {id}
-                </p>
-
-              </div>
-
-            )}
-
-          </NavLink>
-
-        )
+      return (
+        location.pathname ===
+        path
       );
 
     };
 
-  return (
-    <aside
-      className={`
-        h-screen
-        ${
-          isCollapsed
-            ? 'lg:w-24'
-            : 'w-[85vw] max-w-[320px] lg:w-[280px]'
-        }
-        border-r
-        transition-all
-        duration-300
-        flex
-        flex-col
-        justify-between
-        overflow-hidden
-        ${
-          darkMode
-            ? `
-              bg-[#0B1120]/95
-              border-white/10
-              backdrop-blur-xl
-            `
-            : `
-              bg-white
-              border-slate-200
-            `
-        }
-      `}
-    >
+  /**
+   * =========================================================
+   * LOGOUT
+   * =========================================================
+   */
 
-      {/* =====================================================
-          CONTENT
-      ===================================================== */}
+  const handleLogout =
+    () => {
+
+      clearSession();
+
+      navigate('/');
+
+    };
+
+  /**
+   * =========================================================
+   * SIDEBAR CONTENT
+   * =========================================================
+   */
+
+  const SidebarContent =
+    () => (
 
       <div
-        className="
-          flex-1
-          overflow-y-auto
-          overflow-x-hidden
-          px-4
-          py-5
-        "
+        className={`
+          flex
+          flex-col
+          h-full
+          border-r
+          ${styles.sidebar}
+        `}
       >
 
-        {/* ===================================================
-            HEADER
-        =================================================== */}
+        {/* ================================================= */}
+        {/* HEADER */}
+        {/* ================================================= */}
 
         <div
           className="
-            flex
-            items-center
-            justify-between
-            pb-6
-            mb-6
+            px-5
+            py-5
             border-b
-            border-slate-200/10
-            gap-3
+            border-white/10
           "
         >
 
-          {/* LEFT */}
           <div
             className="
               flex
-              items-center
+              items-start
+              justify-between
               gap-3
-              overflow-hidden
-              min-w-0
             "
           >
 
-            <div
-              className={`
-                p-3
-                rounded-2xl
-                border
-                shrink-0
-                ${
-                  darkMode
-                    ? `
-                      bg-white/5
-                      border-white/10
-                    `
-                    : `
-                      bg-slate-50
-                      border-slate-200
-                    `
-                }
-              `}
-            >
+            <div className="min-w-0">
 
-              <ShieldCheck
-                className="
-                  w-5
-                  h-5
-                  text-amber-500
-                "
-              />
+              <div className="flex items-center gap-2 mb-3">
 
-            </div>
-
-            {!isCollapsed && (
-
-              <div className="min-w-0">
-
-                <h2
-                  className="
-                    text-sm
-                    font-black
-                    tracking-[0.2em]
-                    truncate
-                  "
-                >
-                  QC NEXUS
-                </h2>
+                <Sparkles
+                  size={15}
+                  className="text-amber-500"
+                />
 
                 <p
                   className="
-                    text-[10px]
+                    text-xs
                     uppercase
-                    tracking-[0.2em]
-                    opacity-50
-                    mt-1
-                    truncate
+                    tracking-[0.15em]
+                    text-amber-500
+                    font-black
                   "
                 >
-                  {userRole}
+                  QC Training System
                 </p>
 
               </div>
 
-            )}
+              <h1
+                className="
+                  text-2xl
+                  font-black
+                  leading-tight
+                "
+              >
+                NSSB
+              </h1>
+
+            </div>
+
+            {/* MOBILE CLOSE */}
+            <button
+              onClick={() =>
+                setMobileOpen(false)
+              }
+              className="
+                lg:hidden
+                p-2
+                rounded-xl
+                hover:bg-white/10
+                transition-all
+              "
+            >
+
+              <X size={18} />
+
+            </button>
 
           </div>
 
-          {/* COLLAPSE */}
-          <button
-            onClick={() =>
-              setIsCollapsed(
-                !isCollapsed
-              )
-            }
-            className="
-              hidden
-              lg:flex
-              items-center
-              justify-center
-              text-slate-500
-              hover:text-amber-500
-              transition-colors
-              shrink-0
-            "
-          >
-
-            {isCollapsed ? (
-
-              <PanelLeftOpen
-                className="
-                  w-5
-                  h-5
-                "
-              />
-
-            ) : (
-
-              <PanelLeftClose
-                className="
-                  w-5
-                  h-5
-                "
-              />
-
-            )}
-
-          </button>
-
         </div>
 
-        {/* ===================================================
-            NAVIGATION
-        =================================================== */}
+        {/* ================================================= */}
+        {/* USER */}
+        {/* ================================================= */}
 
-        <nav className="space-y-7">
-
-          {/* MAIN */}
-          <section>
-
-            {!isCollapsed && (
-
-              <p
-                className="
-                  text-[10px]
-                  uppercase
-                  tracking-[0.3em]
-                  font-black
-                  opacity-40
-                  mb-4
-                  ml-1
-                "
-              >
-                Main Menu
-              </p>
-
-            )}
-
-            <div className="space-y-2.5">
-              {mainMenus.map(
-                renderMainNav
-              )}
-            </div>
-
-          </section>
-
-          {/* TRAINING */}
-          <section>
-
-            {!isCollapsed && (
-
-              <p
-                className="
-                  text-[10px]
-                  uppercase
-                  tracking-[0.3em]
-                  font-black
-                  opacity-40
-                  mb-4
-                  ml-1
-                "
-              >
-                Training Management
-              </p>
-
-            )}
-
-            <div
-              className={`
-                space-y-2
-                ${
-                  !isCollapsed
-                    ? `
-                      pl-3
-                      border-l
-                      border-white/10
-                    `
-                    : ''
-                }
-              `}
-            >
-
-              {/* OG */}
-              <NavLink
-                to="/training-og"
-                className={({
-                  isActive,
-                }) =>
-                  isActive
-                    ? styles.subActive
-                    : styles.subInactive
-                }
-              >
-
-                <Database
-                  className="
-                    w-4
-                    h-4
-                    shrink-0
-                  "
-                />
-
-                {!isCollapsed && (
-
-                  <span>
-                    WIS Training
-                    (OG)
-                  </span>
-
-                )}
-
-              </NavLink>
-
-              {/* FORMS */}
-              {!isCollapsed && (
-
-                <>
-
-                  <button
-                    onClick={() =>
-                      setIsFormOpen(
-                        !isFormOpen
-                      )
-                    }
-                    className={`
-                      w-full
-                      flex
-                      items-center
-                      justify-between
-                      min-h-[52px]
-                      px-4
-                      py-3
-                      rounded-2xl
-                      text-xs
-                      font-medium
-                      transition-all
-                      ${
-                        darkMode
-                          ? `
-                            text-slate-400
-                            hover:text-white
-                          `
-                          : `
-                            text-slate-600
-                            hover:text-slate-900
-                          `
-                      }
-                    `}
-                  >
-
-                    <div className="flex items-center gap-3">
-
-                      <FileText
-                        className="
-                          w-4
-                          h-4
-                        "
-                      />
-
-                      <span>
-                        Training Forms
-                      </span>
-
-                    </div>
-
-                    <ChevronDown
-                      className={`
-                        w-4
-                        h-4
-                        transition-transform
-                        ${
-                          isFormOpen
-                            ? 'rotate-180'
-                            : ''
-                        }
-                      `}
-                    />
-
-                  </button>
-
-                  {isFormOpen && (
-
-                    <div
-                      className="
-                        ml-4
-                        pl-3
-                        border-l
-                        border-white/10
-                        space-y-2
-                      "
-                    >
-
-                      {renderFormLinks()}
-
-                    </div>
-
-                  )}
-
-                </>
-
-              )}
-
-            </div>
-
-          </section>
-
-          {/* ADMIN */}
-          {userRole ===
-            ROLES.ADMIN &&
-            !isCollapsed && (
-
-              <section>
-
-                <div
-                  className="
-                    p-5
-                    rounded-3xl
-                    border
-                    border-amber-500/20
-                    bg-amber-500/5
-                  "
-                >
-
-                  <div className="flex items-center gap-2 mb-3">
-
-                    <Shield
-                      className="
-                        w-4
-                        h-4
-                        text-amber-500
-                      "
-                    />
-
-                    <span
-                      className="
-                        text-[10px]
-                        uppercase
-                        tracking-widest
-                        font-black
-                        text-amber-500
-                      "
-                    >
-                      Admin Access
-                    </span>
-
-                  </div>
-
-                  <p
-                    className="
-                      text-[11px]
-                      leading-relaxed
-                      opacity-60
-                    "
-                  >
-                    Elevated access enabled
-                    for analytics and
-                    training management.
-                  </p>
-
-                </div>
-
-              </section>
-
-            )}
-
-        </nav>
-
-      </div>
-
-      {/* =====================================================
-          FOOTER
-      ===================================================== */}
-
-      <div
-        className="
-          p-4
-          border-t
-          border-white/10
-          shrink-0
-        "
-      >
-
-        <button
-          onClick={onLogout}
+        <div
           className="
-            w-full
-            flex
-            items-center
-            gap-3
-            min-h-[56px]
-            px-4
-            py-3
-            rounded-2xl
-            text-xs
-            font-black
-            uppercase
-            tracking-widest
-            text-red-500
-            hover:bg-red-500
-            hover:text-white
-            transition-all
+            px-5
+            py-5
+            border-b
+            border-white/10
           "
         >
 
-          <LogOut
+          <div className="flex items-start gap-4">
+
+            <div
+              className="
+                w-12
+                h-12
+                rounded-2xl
+                bg-amber-500/10
+                text-amber-500
+                flex
+                items-center
+                justify-center
+                shrink-0
+              "
+            >
+
+              <UserCircle2 size={26} />
+
+            </div>
+
+            <div className="min-w-0 flex-1">
+
+              <h2
+                className="
+                  font-black
+                  text-base
+                  break-words
+                "
+              >
+                {
+                  currentUser?.name ||
+                  'User'
+                }
+              </h2>
+
+              <p
+                className="
+                  text-sm
+                  opacity-60
+                  mt-1
+                "
+              >
+                {
+                  currentUser?.employeeId
+                }
+              </p>
+
+              <div className="mt-3">
+
+                <Badge
+                  variant="warning"
+                  size="md"
+                >
+
+                  {
+                    ROLE_LABELS[
+                      currentUser?.role
+                    ]
+                  }
+
+                </Badge>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ================================================= */}
+        {/* NAVIGATION */}
+        {/* ================================================= */}
+
+        <div
+  className="
+    flex-1
+    overflow-y-auto
+    px-4
+    py-5
+    space-y-6
+  "
+>
+
+  {/* MAIN */}
+  <div className="space-y-2">
+
+    <p
+      className="
+        text-xs
+        uppercase
+        tracking-[0.15em]
+        opacity-50
+        font-black
+        px-3
+        mb-3
+      "
+    >
+      Main Navigation
+    </p>
+
+    {(executiveMode
+      ? executiveNavigation
+      : operatorNavigation
+    ).map((item) => {
+
+      const Icon =
+        item.icon;
+
+      return (
+
+        <NavLink
+          key={item.path}
+          to={item.path}
+          onClick={() =>
+            setMobileOpen(false)
+          }
+          className={`
+            flex
+            items-center
+            gap-4
+            min-h-[56px]
+            px-4
+            rounded-2xl
+            font-bold
+            transition-all
+            duration-200
+            ${
+              isActive(item.path)
+                ? styles.activeItem
+                : styles.navItem
+            }
+          `}
+        >
+
+          <Icon size={20} />
+
+          <span className="text-sm">
+            {item.label}
+          </span>
+
+        </NavLink>
+
+      );
+
+    })}
+
+  </div>
+
+</div>
+
+{/* FOOTER */}
+<div
+  className="
+    p-4
+    border-t
+    border-white/10
+    pb-safe
+  "
+>
+
+  <Button
+    variant="danger"
+    size="lg"
+    fullWidth
+    icon={LogOut}
+    onClick={handleLogout}
+  >
+
+    Logout
+
+  </Button>
+
+</div>
+</div>
+    );
+
+  /**
+   * =========================================================
+   * RENDER
+   * =========================================================
+   */
+
+  return (
+
+    <>
+
+      {/* ================================================= */}
+      {/* MOBILE TOPBAR */}
+      {/* ================================================= */}
+
+      <div
+        className={`
+          lg:hidden
+          sticky
+          top-0
+          z-50
+          border-b
+          backdrop-blur-xl
+          px-4
+          py-3
+          flex
+          items-center
+          justify-between
+          ${styles.sidebar}
+        `}
+      >
+
+        <div>
+
+          <p
             className="
-              w-4
-              h-4
-              shrink-0
+              text-xs
+              uppercase
+              tracking-[0.15em]
+              text-amber-500
+              font-black
+              mb-1
             "
-          />
+          >
+            QC Training
+          </p>
 
-          {!isCollapsed && (
+          <h1 className="font-black">
+            NSSB
+          </h1>
 
-            <span>
-              Terminate Session
-            </span>
+        </div>
 
-          )}
+        <button
+          onClick={() =>
+            setMobileOpen(true)
+          }
+          className="
+            p-3
+            rounded-2xl
+            bg-amber-500
+            text-slate-950
+            shadow-lg
+            shadow-amber-500/20
+          "
+        >
+
+          <Menu size={20} />
 
         </button>
 
       </div>
 
-    </aside>
+      {/* ================================================= */}
+      {/* MOBILE OVERLAY */}
+      {/* ================================================= */}
+
+      {mobileOpen && (
+
+        <div
+          onClick={() =>
+            setMobileOpen(false)
+          }
+          className="
+            fixed
+            inset-0
+            z-[90]
+            bg-black/60
+            backdrop-blur-sm
+            lg:hidden
+          "
+        />
+
+      )}
+
+      {/* ================================================= */}
+      {/* MOBILE SIDEBAR */}
+      {/* ================================================= */}
+
+      <div
+        className={`
+          fixed
+          inset-y-0
+          left-0
+          z-[100]
+          w-[90%]
+          max-w-[340px]
+          transition-transform
+          duration-300
+          lg:hidden
+          ${
+            mobileOpen
+              ? 'translate-x-0'
+              : '-translate-x-full'
+          }
+        `}
+      >
+
+        <SidebarContent />
+
+      </div>
+
+      {/* ================================================= */}
+      {/* DESKTOP SIDEBAR */}
+      {/* ================================================= */}
+
+      <aside
+        className="
+          hidden
+          lg:flex
+          lg:flex-col
+          lg:w-[320px]
+          lg:h-screen
+          lg:sticky
+          lg:top-0
+        "
+      >
+
+        <SidebarContent />
+
+      </aside>
+
+    </>
+
   );
+
 }

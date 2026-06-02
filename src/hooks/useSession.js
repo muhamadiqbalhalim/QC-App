@@ -266,11 +266,11 @@ export default function useSession() {
 
   /**
    * =========================================================
-   * STAFF CHECK
+   * OPERATOR CHECK
    * =========================================================
    */
 
-  const isStaff =
+  const isOperator =
     useCallback(() => {
 
       const session =
@@ -305,7 +305,7 @@ export default function useSession() {
      */
 
     isExecutive,
-    isStaff,
+    isOperator,
 
   };
 }

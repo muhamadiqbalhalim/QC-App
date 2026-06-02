@@ -55,6 +55,30 @@ export const FORM_REGISTRY = {
 
     shortTitle:
       'Rear Suspension Arm',
+        /**
+   * WIS INFORMATION
+   */
+
+    model:
+      'D27A',
+
+    lineNo:
+      '5-3',
+
+    partNo:
+      '48703-BZ360',
+
+    partName:
+      'ARM ASSY RR SUSPENSION',
+
+    cycleTime:
+      '128 sec/piece',
+
+    page:
+      '3/3',
+
+    wisRevision:
+      '2026',
 
     description:
       'Rear suspension arm assembly inspection and quality verification workflow for QC operational competency assessment.',
@@ -102,7 +126,7 @@ export const FORM_REGISTRY = {
      */
     allowedRoles: [
       ROLES.OPERATOR,
-      ROLES.ADMIN,
+      ROLES.EXECUTIVE,
     ],
 
     /**

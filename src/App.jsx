@@ -23,6 +23,10 @@ import { useTheme } from './context/ThemeContext';
 
 import useSession from './hooks/useSession';
 
+import ReviewForm from './pages/ReviewForm';
+
+import ReviewSubmission from './pages/ReviewSubmission';
+
 export default function App() {
 
   /**
@@ -146,6 +150,32 @@ export default function App() {
 
                 </AppLayout>
 
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/review-form"
+            element={
+              <ProtectedRoute>
+
+                <AppLayout>
+
+                  <ReviewForm />
+
+                </AppLayout>
+
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/review/:submissionId"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <ReviewSubmission />
+                </AppLayout>
               </ProtectedRoute>
             }
           />

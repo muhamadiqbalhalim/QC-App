@@ -6,7 +6,7 @@
  *
  * CURRENT MVP:
  * - EXECUTIVE
- * - STAFF
+ * - Operator
  *
  * Future:
  * - can expand later if needed
@@ -18,8 +18,8 @@ export const ROLES = {
   EXECUTIVE:
     'EXECUTIVE',
 
-  STAFF:
-    'STAFF',
+  OPERATOR:
+    'OPERATOR',
 
 };
 
@@ -53,8 +53,8 @@ export const ROLE_LABELS = {
   [ROLES.EXECUTIVE]:
     'Executive',
 
-  [ROLES.STAFF]:
-    'QC Staff',
+  [ROLES.OPERATOR]:
+    'QC Operator',
 
 };
 
@@ -69,13 +69,14 @@ export const detectUserRole = (
 ) => {
 
   const normalizedId =
-    String(employeeId).trim();
+  String(employeeId ?? '')
+    .trim();
 
   return EXECUTIVE_IDS.includes(
     normalizedId
   )
     ? ROLES.EXECUTIVE
-    : ROLES.STAFF;
+    : ROLES.OPERATOR;
 
 };
 
@@ -90,10 +91,10 @@ export const isExecutive = (
 ) =>
   role === ROLES.EXECUTIVE;
 
-export const isStaff = (
+export const isOperator = (
   role
 ) =>
-  role === ROLES.STAFF;
+  role === ROLES.OPERATOR;
 
 /**
  * =========================================================
@@ -106,9 +107,8 @@ export const isExecutiveUser = (
 ) => {
 
   return EXECUTIVE_IDS.includes(
-    String(employeeId).trim()
-  );
+  String(employeeId ?? '')
+    .trim()
+);
 
 };
-
-export default ROLES;
