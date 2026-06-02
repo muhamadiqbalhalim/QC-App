@@ -313,16 +313,16 @@ export default function Sidebar() {
 
           {/* USER */}
 
-          <div
-            className="
-              hidden
-              lg:block
-              px-5
-              py-5
-              border-b
-              border-white/10
-            "
-          >
+        <div
+          className="
+            hidden
+            lg:block
+            px-5
+            py-5
+            border-b
+            border-white/10
+          "
+        >
 
           <div className="flex items-start gap-4">
 
@@ -605,8 +605,7 @@ export default function Sidebar() {
           inset-y-0
           left-0
           z-[100]
-          w-[90%]
-          max-w-[280px]
+          w-[280px]
           transition-transform
           duration-300
           lg:hidden
