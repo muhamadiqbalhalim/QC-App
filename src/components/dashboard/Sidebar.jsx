@@ -1,6 +1,5 @@
 import React, {
   useMemo,
-  useState,
 } from 'react';
 
 import {
@@ -14,14 +13,9 @@ import {
   ShieldCheck,
   BookOpen,
   LogOut,
-  X,
   Sparkles,
   UserCircle2,
 } from 'lucide-react';
-
-import {
-  useTheme,
-} from '../../context/ThemeContext';
 
 import useSession from '../../hooks/useSession';
 
@@ -48,9 +42,6 @@ export default function Sidebar() {
 
   const location =
     useLocation();
-
-  const { darkMode } =
-    useTheme();
 
   const {
     getSession,
@@ -87,25 +78,15 @@ export default function Sidebar() {
 
   const styles = {
 
-    sidebar: darkMode
-      ? `
-        bg-[#09090B]
-        border-zinc-800
-        text-white
-      `
-      : `
-        bg-white
-        border-slate-200
-        text-slate-900
-      `,
+    sidebar: `
+      bg-white
+      border-slate-200
+      text-slate-900
+    `,
 
-    navItem: darkMode
-      ? `
-        hover:bg-zinc-800/70
-      `
-      : `
-        hover:bg-slate-100
-      `,
+    navItem: `
+      hover:bg-slate-100
+    `,
 
     activeItem: `
       bg-amber-500
@@ -235,7 +216,7 @@ export default function Sidebar() {
             px-5
             py-5
             border-b
-            border-white/10
+            border-slate-200
           "
         >
 
@@ -294,7 +275,7 @@ export default function Sidebar() {
             px-5
             py-5
             border-b
-            border-white/10
+            border-slate-200
           "
         >
 
@@ -432,7 +413,12 @@ export default function Sidebar() {
 
           <Icon size={20} />
 
-          <span className="text-sm">
+          <span
+            className="
+              text-[15px]
+              font-semibold
+            "
+          >
             {item.label}
           </span>
 
@@ -451,7 +437,7 @@ export default function Sidebar() {
   className="
     p-4
     border-t
-    border-white/10
+    border-slate-200
     pb-safe
   "
 >

@@ -11,8 +11,6 @@ import {
   User,
   Loader2,
   ShieldCheck,
-  Sun,
-  Moon,
   BadgeCheck,
 } from 'lucide-react';
 
@@ -26,10 +24,6 @@ import {
 import {
   db,
 } from '../config/firebase';
-
-import {
-  useTheme,
-} from '../context/ThemeContext';
 
 import useSession from '../hooks/useSession';
 
@@ -63,11 +57,6 @@ export default function Login({
    * HOOKS
    * =========================================================
    */
-
-  const {
-    darkMode,
-    toggleTheme,
-  } = useTheme();
 
   const {
     saveSession,
@@ -279,53 +268,26 @@ export default function Login({
 
     };
 
-  /**
-   * =========================================================
-   * STYLES
-   * =========================================================
-   */
-
-  const styles = {
-
-    page: darkMode
-      ? 'bg-[#09090B] text-white'
-      : 'bg-[#F8FAFC] text-slate-900',
-
-    border: darkMode
-      ? 'border-zinc-800'
-      : 'border-slate-200',
-
-    glass: darkMode
-      ? `
-        bg-zinc-900/80
-        border-zinc-800
-      `
-      : `
-        bg-white/90
-        border-slate-200
-      `,
-
-  };
-
   return (
-    <div
-      className={`
-        min-h-screen
-        flex
-        flex-col
-        md:flex-row
-        overflow-hidden
-        transition-all
-        duration-500
-        ${styles.page}
-      `}
-    >
+      <div
+        className="
+          min-h-screen
+          flex
+          flex-col
+          md:flex-row
+          overflow-hidden
+          transition-all
+          duration-500
+          bg-[#F8FAFC]
+          text-slate-900
+        "
+      >
 
       {/* BACKGROUND */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
 
         <div
-          className={`
+          className="
             absolute
             top-[-10%]
             left-[-10%]
@@ -334,16 +296,12 @@ export default function Login({
             rounded-full
             blur-[100px]
             opacity-10
-            ${
-              darkMode
-                ? 'bg-blue-700'
-                : 'bg-blue-300'
-            }
-          `}
+            bg-blue-300
+          "
         />
 
         <div
-          className={`
+          className="
             absolute
             bottom-[-15%]
             right-[-10%]
@@ -352,31 +310,26 @@ export default function Login({
             rounded-full
             blur-[100px]
             opacity-10
-            ${
-              darkMode
-                ? 'bg-amber-500'
-                : 'bg-amber-300'
-            }
-          `}
+            bg-amber-300
+          "
         />
-
       </div>
 
       {/* LEFT PANEL */}
-      <div
-        className={`
-          relative
-          w-full
-          md:w-[42%]
-          p-12
-          flex
-          flex-col
-          justify-between
-          border-r
-          z-10
-          ${styles.border}
-        `}
-      >
+        <div
+          className="
+            relative
+            w-full
+            md:w-[42%]
+            p-12
+            flex
+            flex-col
+            justify-between
+            border-r
+            border-slate-200
+            z-10
+          "
+        >
 
         {/* LOGO */}
         <div className="flex items-center gap-4">
@@ -508,18 +461,19 @@ export default function Login({
         "
       >
 
-        <div
-          className={`
-            w-full
-            max-w-[430px]
-            rounded-3xl
-            border
-            p-8
-            backdrop-blur-xl
-            shadow-2xl
-            ${styles.glass}
-          `}
-        >
+          <div
+            className="
+              w-full
+              max-w-[430px]
+              rounded-3xl
+              border
+              border-slate-200
+              bg-white/90
+              p-8
+              backdrop-blur-xl
+              shadow-2xl
+            "
+          >
 
           {/* HEADER */}
           <div className="mb-8">
@@ -582,7 +536,7 @@ export default function Login({
                   }
                   autoComplete="off"
                   required
-                  className={`
+                  className="
                     w-full
                     pl-12
                     pr-4
@@ -592,22 +546,12 @@ export default function Login({
                     outline-none
                     transition-all
                     font-semibold
-                    ${
-                      darkMode
-                        ? `
-                          bg-[#111827]
-                          border-slate-700
-                          text-white
-                          focus:border-amber-500
-                        `
-                        : `
-                          bg-white
-                          border-slate-300
-                          text-slate-900
-                          focus:border-amber-500
-                        `
-                    }
-                  `}
+                    bg-white
+                    border-slate-300
+                    text-slate-900
+                    focus:border-amber-500
+                  "
+                
                 />
 
               </div>
@@ -714,38 +658,6 @@ export default function Login({
             </button>
 
           </form>
-
-          {/* THEME */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="
-              w-full
-              flex
-              items-center
-              justify-center
-              gap-2
-              mt-6
-              text-xs
-              uppercase
-              tracking-widest
-              font-bold
-              opacity-60
-              hover:opacity-100
-              hover:text-amber-500
-              transition-all
-            "
-          >
-
-            {darkMode ? (
-              <Sun size={14} />
-            ) : (
-              <Moon size={14} />
-            )}
-
-            Toggle Theme
-
-          </button>
 
         </div>
 

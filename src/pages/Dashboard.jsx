@@ -13,8 +13,6 @@ import {
   User,
   Award,
   Folder,
-  Sun,
-  Moon,
   AlertTriangle,
   ArrowUpRight,
   CheckCircle2,
@@ -37,10 +35,6 @@ import {
 import {
   db,
 } from '../config/firebase';
-
-import {
-  useTheme,
-} from '../context/ThemeContext';
 
 import useSession from '../hooks/useSession';
 
@@ -100,12 +94,6 @@ export default function Dashboard({
    * HOOKS
    * =========================================================
    */
-
-  const {
-    darkMode,
-    toggleTheme,
-  } = useTheme();
-
   const {
     getSession,
   } = useSession();
@@ -601,20 +589,6 @@ const fetchDashboardData = useCallback(
 
   /**
    * =========================================================
-   * STYLES
-   * =========================================================
-   */
-
-  const styles = {
-
-    page: darkMode
-      ? 'bg-[#09090B] text-white'
-      : 'bg-[#F8FAFC] text-slate-900',
-
-  };
-
-  /**
-   * =========================================================
    * LOADING
    * =========================================================
    */
@@ -623,16 +597,15 @@ const fetchDashboardData = useCallback(
 
     return (
 
-      <div
-        className={`
-          min-h-[70vh]
-          flex
-          items-center
-          justify-center
-          px-6
-          ${styles.page}
-        `}
-      >
+        <div
+          className="
+            min-h-screen
+            transition-all
+            duration-500
+            bg-[#F8FAFC]
+            text-slate-900
+          "
+        >
 
         <div className="text-center">
 
@@ -665,12 +638,13 @@ const fetchDashboardData = useCallback(
   return (
 
     <div
-      className={`
+      className="
         min-h-screen
         transition-all
         duration-500
-        ${styles.page}
-      `}
+        bg-[#F8FAFC]
+        text-slate-900
+      "
     >
 
       <main
@@ -730,7 +704,7 @@ const fetchDashboardData = useCallback(
 
             <h1
               className="
-                text-3xl
+                text-2xl
                 sm:text-4xl
                 lg:text-5xl
                 font-black
@@ -775,31 +749,13 @@ const fetchDashboardData = useCallback(
               }
 
             </Badge>
-
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={toggleTheme}
-              icon={
-                darkMode
-                  ? Sun
-                  : Moon
-              }
-            >
-
-              {darkMode
-                ? 'Light'
-                : 'Dark'}
-
-            </Button>
-
           </div>
 
         </header>
 
         <section className="block sm:hidden">
 
-          <Card darkMode={darkMode}>
+          <Card>
 
             <div className="space-y-3">
 
@@ -858,21 +814,18 @@ const fetchDashboardData = useCallback(
             icon={User}
             label="EMPLOYEE NAME"
             value={currentUser.name}
-            darkMode={darkMode}
           />
 
           <MetaCards
             icon={Award}
             label="EMPLOYEE ID"
             value={currentUser.employeeId}
-            darkMode={darkMode}
           />
 
           <MetaCards
             icon={Folder}
             label="DEPARTMENT"
             value={currentUser.department}
-            darkMode={darkMode}
           />
 
         </section>
@@ -887,7 +840,6 @@ const fetchDashboardData = useCallback(
 
             {/* SUMMARY */}
             <Card
-              darkMode={darkMode}
               hover
             >
 
@@ -978,7 +930,6 @@ const fetchDashboardData = useCallback(
               submissions={
                 executivePendingApprovals
               }
-              darkMode={darkMode}
               onApprove={handleApprove}
               onReject={handleReject}
             />
@@ -1016,10 +967,9 @@ const fetchDashboardData = useCallback(
 
                   <Card
                     key={card.label}
-                    darkMode={darkMode}
                     hover
                     className={`
-                      min-h-[110px]
+                      min-h-[100px]
                       lg:min-h-[150px]
                       relative
                       overflow-hidden
@@ -1102,7 +1052,6 @@ const fetchDashboardData = useCallback(
 
               {/* RADAR */}
               <Card
-                darkMode={darkMode}
                 className="
                   xl:col-span-2
                   overflow-hidden
@@ -1113,15 +1062,12 @@ const fetchDashboardData = useCallback(
 
                 <RadarChartCard
                   skills={radarSkills}
-                  darkMode={darkMode}
                 />
 
               </Card>
 
               {/* PENDING */}
-              <Card
-                darkMode={darkMode}
-              >
+              <Card>
 
                 <div className="mb-5">
 
@@ -1186,17 +1132,8 @@ const fetchDashboardData = useCallback(
                             duration-300
                             hover:-translate-y-1
                             hover:border-amber-500/30
-                            ${
-                              darkMode
-                                ? `
-                                  border-zinc-800
-                                  bg-zinc-950/40
-                                `
-                                : `
-                                  border-slate-200
-                                  bg-slate-50
-                                `
-                            }
+                            border-slate-200
+                            bg-slate-50
                           `}
                         >
 

@@ -202,10 +202,8 @@ export default function AppLayout({
             px-4
             py-4
             border-b
-            border-black/5
-            dark:border-white/10
-            bg-white/80
-            dark:bg-[#09090B]/80
+            border-slate-200
+            bg-white/95
             backdrop-blur-xl
           "
         >
@@ -227,10 +225,8 @@ export default function AppLayout({
                 h-11
                 rounded-2xl
                 border
-                border-black/5
-                dark:border-white/10
+                border-slate-200
                 bg-white
-                dark:bg-zinc-900
                 shadow-sm
               "
             >
@@ -262,7 +258,6 @@ export default function AppLayout({
                   text-sm
                   font-black
                   text-slate-900
-                  dark:text-white
                 "
               >
                 QC Training
@@ -278,19 +273,20 @@ export default function AppLayout({
             PAGE CONTENT
         =================================================== */}
 
-          <main
-            className="
-              flex-1
-              overflow-y-auto
-              overflow-x-hidden
-              min-w-0
-              px-2
-              sm:px-4
-              md:px-6
-              lg:px-0
-              pb-10
-            "
-          >
+        <main
+          className="
+            flex-1
+            overflow-y-auto
+            overflow-x-hidden
+            min-w-0
+            bg-[#F8FAFC]
+            px-2
+            sm:px-4
+            md:px-6
+            lg:px-0
+            pb-10
+          "
+        >
 
           {children}
 

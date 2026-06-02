@@ -8,8 +8,6 @@ export default function Card({
 
   padding = 'default',
 
-  darkMode = false,
-
   hover = false,
 
 }) {
@@ -32,6 +30,9 @@ export default function Card({
       className={`
         rounded-3xl
         border
+        bg-white
+        border-slate-200
+        text-slate-900
         backdrop-blur-xl
         shadow-sm
         transition-all
@@ -43,19 +44,6 @@ export default function Card({
               hover:shadow-xl
             `
             : ''
-        }
-        ${
-          darkMode
-            ? `
-              bg-zinc-900/80
-              border-zinc-800
-              text-white
-            `
-            : `
-              bg-white
-              border-slate-200
-              text-slate-900
-            `
         }
         ${paddingStyles[padding]}
         ${className}

@@ -5,43 +5,26 @@ function MetaCards({
   label,
   value,
   mono = false,
-  darkMode,
 }) {
   const styles = {
-    card: darkMode
-      ? `
-        bg-white/5
-        border-white/10
-        hover:border-amber-500/20
-        backdrop-blur-xl
-      `
-      : `
-        bg-white
-        border-slate-200
-        hover:border-slate-300
-      `,
 
-    iconBox: darkMode
-      ? `
-        bg-[#111827]
-        border-white/10
-        text-amber-400
-      `
-      : `
-        bg-amber-50
-        border-amber-100
-        text-amber-600
-      `,
+    card: `
+      bg-white
+      border-slate-200
+      hover:border-slate-300
+    `,
 
-    valueText: darkMode
-      ? mono
-        ? 'font-mono text-amber-400'
-        : 'text-white'
-      : mono
+    iconBox: `
+      bg-amber-50
+      border-amber-100
+      text-amber-600
+    `,
+
+    valueText: mono
       ? 'font-mono text-amber-600'
       : 'text-slate-900',
-  };
 
+  };
   return (
     <div
       className={`

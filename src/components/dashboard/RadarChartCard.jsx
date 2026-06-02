@@ -14,7 +14,6 @@ import {
 
 function RadarChartCard({
   skills = {},
-  darkMode,
 }) {
   /**
    * Dynamic chart data
@@ -59,13 +58,10 @@ function RadarChartCard({
   }, [skills]);
 
   const colors = {
-    grid: darkMode
-      ? '#334155'
-      : '#CBD5E1',
 
-    text: darkMode
-      ? '#94A3B8'
-      : '#64748B',
+    grid: '#CBD5E1',
+
+    text: '#64748B',
 
     radarStroke: '#F59E0B',
 
@@ -168,11 +164,7 @@ function RadarChartCard({
                 colors.radarStroke
               }
               fill={colors.radarFill}
-              fillOpacity={
-                darkMode
-                  ? 0.2
-                  : 0.25
-              }
+              fillOpacity={0.25}
               strokeWidth={2.5}
             />
           </RadarChart>

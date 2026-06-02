@@ -87,8 +87,8 @@ const InputField = memo(function InputField({
 
         }}
         className={`
-          w-14
-          h-14
+          w-16
+          h-16
           rounded-2xl
           border-2
           transition-all
@@ -119,9 +119,7 @@ const InputField = memo(function InputField({
               `
               : `
                 bg-white
-                dark:bg-slate-900
                 border-slate-300
-                dark:border-slate-700
                 hover:border-emerald-500
               `
           }
@@ -145,8 +143,8 @@ const InputField = memo(function InputField({
 
         }}
         className={`
-          w-14
-          h-14
+          w-16
+          h-16
           rounded-2xl
           border-2
           transition-all
@@ -177,9 +175,7 @@ const InputField = memo(function InputField({
               `
               : `
                 bg-white
-                dark:bg-slate-900
                 border-slate-300
-                dark:border-slate-700
                 hover:border-red-500
               `
           }
@@ -332,7 +328,6 @@ const InspectionRow = memo(function InspectionRow({
     <tr
       className="
         hover:bg-amber-50/40
-        dark:hover:bg-amber-500/5
         transition-colors
         duration-150
       "
@@ -351,14 +346,12 @@ const InspectionRow = memo(function InspectionRow({
           p-3
           border
           border-slate-200
-          dark:border-slate-700
           text-center
           font-mono
           font-bold
           text-xs
           text-slate-500
           bg-white
-          dark:bg-slate-900
           shadow-[6px_0_10px_-8px_rgba(0,0,0,0.25)]
         "
       >
@@ -383,12 +376,10 @@ const InspectionRow = memo(function InspectionRow({
           p-4
           border
           border-slate-200
-          dark:border-slate-700
           font-semibold
           text-sm
           sm:text-base
           bg-white
-          dark:bg-slate-900
           shadow-[6px_0_10px_-8px_rgba(0,0,0,0.25)]
         "
       >
@@ -481,7 +472,6 @@ const InspectionRow = memo(function InspectionRow({
           sm:text-base
           leading-7
           text-slate-600
-          dark:text-slate-300
         "
       >
         {row.criteria}
@@ -516,10 +506,10 @@ const InspectionRow = memo(function InspectionRow({
             alt="Standard"
             loading="lazy"
             className="
-              w-28
-              h-20
-              sm:w-32
-              sm:h-24
+              w-32
+              h-24
+              sm:w-36
+              sm:h-28
               object-cover
               rounded-2xl
               border
@@ -563,7 +553,7 @@ const InspectionRow = memo(function InspectionRow({
             px-4
             py-2
             rounded-xl
-            text-xs
+            text-sm
             font-black
             uppercase
             border
@@ -584,7 +574,6 @@ const InspectionRow = memo(function InspectionRow({
           leading-7
           min-w-[260px]
           text-slate-600
-          dark:text-slate-300
         "
       >
         {row.keyPoint}
@@ -619,17 +608,17 @@ const InspectionRow = memo(function InspectionRow({
             alt="Reference"
             loading="lazy"
             className="
-              w-28
-              h-20
-              sm:w-32
-              sm:h-24
-              object-cover
-              rounded-2xl
-              border
-              transition-transform
-              duration-300
-              group-hover:scale-105
-            "
+            w-32
+            h-24
+            sm:w-36
+            sm:h-28
+            object-cover
+            rounded-2xl
+            border
+            transition-transform
+            duration-300
+            group-hover:scale-105
+          "
           />
 
           <div
@@ -821,11 +810,9 @@ function InspectionTable({
       <div
         className="
           bg-white
-          dark:bg-slate-900
           rounded-3xl
           border
           border-slate-200
-          dark:border-slate-800
           shadow-xl
           overflow-hidden
         "
@@ -841,12 +828,11 @@ function InspectionTable({
             text-amber-500
             border-b
             border-slate-200
-            dark:border-slate-800
             lg:hidden
             bg-amber-500/5
           "
         >
-          Swipe left/right to view inspection table
+          Swipe to view all inspection details
         </div>
 
         {/* TABLE CONTAINER */}
@@ -867,8 +853,8 @@ function InspectionTable({
           <table
             className="
               w-max
-              min-w-[1450px]
-              lg:min-w-[1800px]
+              min-w-[1100px]
+              lg:min-w-[1400px]
               table-fixed
               border-separate
               border-spacing-0
@@ -880,7 +866,6 @@ function InspectionTable({
             <thead
               className="
                 bg-slate-100
-                dark:bg-slate-900
               "
             >
 
@@ -899,9 +884,7 @@ function InspectionTable({
                     p-4
                     border
                     border-slate-200
-                    dark:border-slate-700
                     bg-slate-100
-                    dark:bg-slate-900
                   "
                 >
                   ID
@@ -921,39 +904,37 @@ function InspectionTable({
                     p-4
                     border
                     border-slate-200
-                    dark:border-slate-700
                     bg-slate-100
-                    dark:bg-slate-900
                   "
                 >
                   Inspection Item
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 dark:bg-slate-900 min-w-[220px]">
+                <th className="sticky top-0 z-10 p-4 border bg-slate-100 min-w-[220px]">
                   Criteria
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 dark:bg-slate-900">
+                <th className="sticky top-0 z-10 p-4 border bg-slate-100">
                   Standard
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 dark:bg-slate-900">
+                <th className="sticky top-0 z-10 p-4 border bg-slate-100">
                   Rank
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 dark:bg-slate-900 min-w-[260px]">
+                <th className="sticky top-0 z-10 p-4 border bg-slate-100 min-w-[260px]">
                   Key Point
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 dark:bg-slate-900">
+                <th className="sticky top-0 z-10 p-4 border bg-slate-100">
                   Reference
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 dark:bg-slate-900 min-w-[240px]">
+                <th className="sticky top-0 z-10 p-4 border bg-slate-100 min-w-[240px]">
                   Method
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 dark:bg-slate-900">
+                <th className="sticky top-0 z-10 p-4 border bg-slate-100">
                   CT
                 </th>
 
@@ -968,7 +949,6 @@ function InspectionTable({
                       p-4
                       border
                       bg-slate-100
-                      dark:bg-slate-900
                       min-w-[180px]
                     "
                   >

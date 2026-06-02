@@ -20,7 +20,6 @@ import {
   CheckCircle2,
   XCircle,
   ShieldCheck,
-  Loader2,
   AlertTriangle,
   ClipboardCheck,
 } from 'lucide-react';
@@ -28,10 +27,6 @@ import {
 import {
   db,
 } from '../config/firebase';
-
-import {
-  useTheme,
-} from '../context/ThemeContext';
 
 import {
   FORM_REGISTRY,
@@ -60,10 +55,6 @@ export default function ReviewSubmission() {
 
   const { submissionId } =
     useParams();
-
-  const { darkMode } =
-    useTheme();
-
   /**
    * =========================================================
    * STATES
@@ -373,19 +364,6 @@ export default function ReviewSubmission() {
       ?.inspectionSummary
       ?.failed || 0;
 
-  /**
-   * =========================================================
-   * STYLES
-   * =========================================================
-   */
-
-  const styles = {
-
-    page: darkMode
-      ? 'bg-[#09090B] text-white'
-      : 'bg-[#F8FAFC] text-slate-900',
-
-  };
 
   /**
    * =========================================================
@@ -403,7 +381,8 @@ export default function ReviewSubmission() {
           flex
           items-center
           justify-center
-          ${styles.page}
+          bg-[#F8FAFC]
+          text-slate-900
         `}
       >
 
@@ -452,7 +431,8 @@ export default function ReviewSubmission() {
           items-center
           justify-center
           px-5
-          ${styles.page}
+          bg-[#F8FAFC]
+          text-slate-900
         `}
       >
 
@@ -504,7 +484,8 @@ export default function ReviewSubmission() {
         lg:py-8
         space-y-5
         sm:space-y-6
-        ${styles.page}
+        bg-[#F8FAFC]
+        text-slate-900
       `}
     >
 
@@ -618,7 +599,7 @@ export default function ReviewSubmission() {
       {failedInspectionCount > 0 && (
 
         <Card
-          darkMode={darkMode}
+          
           className="
             border-red-500/20
             bg-red-500/10
@@ -671,7 +652,7 @@ export default function ReviewSubmission() {
       {/* EMPLOYEE */}
       {/* ================================================= */}
 
-      <Card darkMode={darkMode}>
+      <Card >
 
         <div
           className="
@@ -791,7 +772,7 @@ export default function ReviewSubmission() {
       >
 
         <Card
-          darkMode={darkMode}
+          
           hover
         >
 
@@ -808,7 +789,8 @@ export default function ReviewSubmission() {
 
           <h2
             className="
-              text-4xl
+              text-3xl
+              sm:text-4xl
               font-black
             "
           >
@@ -822,7 +804,7 @@ export default function ReviewSubmission() {
         </Card>
 
         <Card
-          darkMode={darkMode}
+          
           hover
         >
 
@@ -839,7 +821,8 @@ export default function ReviewSubmission() {
 
           <h2
             className="
-              text-4xl
+              text-3xl
+              sm:text-4xl
               font-black
               text-emerald-500
             "
@@ -854,7 +837,7 @@ export default function ReviewSubmission() {
         </Card>
 
         <Card
-          darkMode={darkMode}
+          
           hover
           className="
             border-red-500/20
@@ -875,9 +858,10 @@ export default function ReviewSubmission() {
 
           <h2
             className="
-              text-4xl
-              font-black
-              text-red-500
+            text-3xl
+            sm:text-4xl
+            font-black
+            text-red-500
             "
           >
             {
@@ -890,7 +874,7 @@ export default function ReviewSubmission() {
         </Card>
 
         <Card
-          darkMode={darkMode}
+          
           hover
         >
 
@@ -926,7 +910,7 @@ export default function ReviewSubmission() {
       {/* ================================================= */}
 
       <Card
-        darkMode={darkMode}
+        
         className="space-y-8"
       >
 
@@ -1058,7 +1042,7 @@ export default function ReviewSubmission() {
 
                         <Card
                           key={item.id}
-                          darkMode={darkMode}
+                          
                           hover
                           className={`
                             ${
@@ -1248,7 +1232,8 @@ export default function ReviewSubmission() {
                               size="lg"
                               className="
                                 min-h-[60px]
-                                min-w-[180px]
+                                min-w-[140px]
+                                sm:min-w-[180px]
                                 text-base
                               "
                             >
@@ -1304,7 +1289,7 @@ export default function ReviewSubmission() {
         TRAINING_STATUS.SUBMITTED && (
 
         <Card
-          darkMode={darkMode}
+          
           className="
             sticky
             bottom-0

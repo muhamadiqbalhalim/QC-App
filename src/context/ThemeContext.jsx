@@ -1,119 +1,15 @@
 import React, {
   createContext,
   useContext,
-  useEffect,
   useMemo,
-  useState,
 } from 'react';
 
-/**
- * =========================================================
- * THEME STORAGE KEY
- * =========================================================
- * Centralized key for theme persistence.
- *
- * FUTURE IMPROVEMENT:
- * Move this into:
- * src/config/constants/storageKeys.js
- * =========================================================
- */
-const THEME_STORAGE_KEY = 'p2sa_theme';
-
-/**
- * =========================================================
- * THEME CONTEXT
- * =========================================================
- * Global theme state manager.
- *
- * RESPONSIBILITIES:
- * - Manage dark/light mode
- * - Persist theme into localStorage
- * - Sync Tailwind dark class
- * - Provide centralized theme access
- * =========================================================
- */
 const ThemeContext = createContext(null);
-
-/**
- * =========================================================
- * THEME PROVIDER
- * =========================================================
- * Wraps the entire application.
- *
- * EXAMPLE:
- * <ThemeProvider>
- *    <App />
- * </ThemeProvider>
- * =========================================================
- */
 export function ThemeProvider({ children }) {
 
-  /**
-   * =========================================================
-   * INITIAL THEME STATE
-   * =========================================================
-   * Reads persisted theme from localStorage.
-   *
-   * DEFAULT:
-   * - light mode
-   * =========================================================
-   */
-  const [darkMode, setDarkMode] = useState(() => {
+  const darkMode = false;
 
-    try {
-
-      const savedTheme =
-        localStorage.getItem(
-          THEME_STORAGE_KEY
-        );
-
-      return savedTheme === 'dark';
-
-    } catch (error) {
-
-      console.error(
-        'Failed to initialize theme:',
-        error
-      );
-
-      return false;
-
-    }
-
-  });
-
-  /**
-   * =========================================================
-   * SYNC THEME
-   * =========================================================
-   * Updates:
-   * - localStorage
-   * - DOM dark class
-   * =========================================================
-   */
-  useEffect(() => {
-    try {
-
-      /**
-       * Persist theme
-       */
-      localStorage.setItem(
-        THEME_STORAGE_KEY,
-        darkMode ? 'dark' : 'light'
-      );
-
-      /**
-       * Sync Tailwind dark mode class
-       */
-      document.documentElement.classList.toggle(
-        'dark',
-        darkMode
-      );
-
-    } catch (error) {
-      console.error('Failed to sync theme:', error);
-    }
-  }, [darkMode]);
+  const setDarkMode = () => {};
 
   /**
    * =========================================================
@@ -122,9 +18,7 @@ export function ThemeProvider({ children }) {
    * Cleaner reusable toggle handler.
    * =========================================================
    */
-  const toggleTheme = () => {
-    setDarkMode((prev) => !prev);
-  };
+  const toggleTheme = () => {};
 
   /**
    * =========================================================

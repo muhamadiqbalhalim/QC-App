@@ -31,10 +31,6 @@ import {
   db,
 } from '../config/firebase';
 
-import {
-  useTheme,
-} from '../context/ThemeContext';
-
 import useSession from '../hooks/useSession';
 
 import {
@@ -71,9 +67,6 @@ export default function TrainingHistory() {
 
   const navigate =
     useNavigate();
-
-  const { darkMode } =
-    useTheme();
 
   const { getSession } =
     useSession();
@@ -296,30 +289,6 @@ export default function TrainingHistory() {
 
   /**
    * =========================================================
-   * STYLES
-   * =========================================================
-   */
-
-  const styles = {
-
-    page: darkMode
-      ? 'bg-[#09090B] text-white'
-      : 'bg-[#F8FAFC] text-slate-900',
-
-    card: darkMode
-      ? `
-        bg-zinc-900/80
-        border-zinc-800
-      `
-      : `
-        bg-white
-        border-slate-200
-      `,
-
-  };
-
-  /**
-   * =========================================================
    * LOADING
    * =========================================================
    */
@@ -333,7 +302,8 @@ export default function TrainingHistory() {
           flex
           items-center
           justify-center
-          ${styles.page}
+          bg-[#F8FAFC]
+          text-slate-900
         `}
       >
 
@@ -377,7 +347,8 @@ export default function TrainingHistory() {
         space-y-5
         sm:space-y-6
         lg:space-y-8
-        ${styles.page}
+        bg-[#F8FAFC]
+        text-slate-900
       `}
     >
 
@@ -454,15 +425,16 @@ export default function TrainingHistory() {
           SUMMARY CARDS
       ===================================================== */}
 
-      <section
-        className="
-          grid
-          grid-cols-3
-          gap-3
-          sm:gap-4
-          lg:gap-6
-        "
-      >
+        <section
+          className="
+            grid
+            grid-cols-1
+            sm:grid-cols-3
+            gap-3
+            sm:gap-4
+            lg:gap-6
+          "
+        >
 
         {[
           {
@@ -499,7 +471,8 @@ export default function TrainingHistory() {
               p-4
               sm:p-5
               lg:p-6
-              ${styles.card}
+              bg-white
+              border-slate-200
             `}
           >
 
@@ -566,7 +539,8 @@ export default function TrainingHistory() {
                   sm:p-6
                   transition-all
                   duration-300
-                  ${styles.card}
+                  bg-white
+                  border-slate-200
                 `}
               >
 
@@ -727,7 +701,16 @@ export default function TrainingHistory() {
                     </div>
 
                     {/* ACTIONS */}
-                    <div className="flex gap-3">
+                    <div
+                      className="
+                        flex
+                        flex-col
+                        sm:flex-row
+                        gap-3
+                        w-full
+                        sm:w-auto
+                      "
+                    >
 
                       <button
                         onClick={() =>
@@ -736,6 +719,8 @@ export default function TrainingHistory() {
                           )
                         }
                         className="
+                          w-full
+                          sm:w-auto
                           flex
                           items-center
                           justify-center
@@ -745,7 +730,6 @@ export default function TrainingHistory() {
                           rounded-2xl
                           border
                           border-slate-200
-                          dark:border-zinc-700
                           font-bold
                           text-sm
                           hover:border-amber-500
@@ -769,6 +753,8 @@ export default function TrainingHistory() {
                           )
                         }
                         className="
+                          w-full
+                          sm:w-auto
                           flex
                           items-center
                           justify-center
@@ -814,7 +800,8 @@ export default function TrainingHistory() {
               border
               p-10
               text-center
-              ${styles.card}
+              bg-white
+              border-slate-200
             `}
           >
 
