@@ -369,8 +369,8 @@ const InspectionRow = memo(function InspectionRow({
           left-[90px]
           sm:left-[110px]
           z-20
-          w-[240px]
-          min-w-[240px]
+          w-[180px]
+          min-w-[180px]
           sm:w-[340px]
           sm:min-w-[340px]
           p-4
@@ -836,19 +836,19 @@ function InspectionTable({
         </div>
 
         {/* TABLE CONTAINER */}
-        <div
-          className="
-            relative
-            overflow-x-auto
-            overflow-y-visible
-            w-full
-            touch-pan-x
-            touch-pan-y
-            overscroll-x-contain
-            overscroll-y-contain
-            [-webkit-overflow-scrolling:touch]
-          "
-        >
+          <div
+            className="
+              mobile-table-scroll
+              relative
+              overflow-x-auto
+              overflow-y-hidden
+              w-full
+              pb-3
+              touch-pan-x
+              overscroll-x-contain
+              [-webkit-overflow-scrolling:touch]
+            "
+          >
 
           <table
             className="
@@ -897,8 +897,8 @@ function InspectionTable({
                     left-[90px]
                     sm:left-[110px]
                     z-40
-                    w-[240px]
-                    min-w-[240px]
+                    w-[180px]
+                    min-w-[180px]
                     sm:w-[340px]
                     sm:min-w-[340px]
                     p-4

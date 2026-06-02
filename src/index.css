@@ -25,3 +25,16 @@ body {
 
   color: #0F172A;
 }
+
+.mobile-table-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.mobile-table-scroll::-webkit-scrollbar-thumb {
+  background: #f59e0b;
+  border-radius: 999px;
+}
+
+.mobile-table-scroll::-webkit-scrollbar-track {
+  background: #e5e7eb;
+}
