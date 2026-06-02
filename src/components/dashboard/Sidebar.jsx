@@ -282,27 +282,7 @@ export default function Sidebar() {
               </h1>
 
             </div>
-
-            {/* MOBILE CLOSE */}
-            <button
-              onClick={() =>
-                setMobileOpen(false)
-              }
-              className="
-                lg:hidden
-                p-2
-                rounded-xl
-                hover:bg-white/10
-                transition-all
-              "
-            >
-
-              <X size={18} />
-
-            </button>
-
           </div>
-
         </div>
 
           {/* USER */}
@@ -432,9 +412,6 @@ export default function Sidebar() {
         <NavLink
           key={item.path}
           to={item.path}
-          onClick={() =>
-            setMobileOpen(false)
-          }
           className={`
             flex
             items-center
@@ -508,17 +485,14 @@ export default function Sidebar() {
       {/* DESKTOP SIDEBAR */}
       {/* ================================================= */}
 
-      <aside
-        className="
-          hidden
-          lg:flex
-          lg:flex-col
-          lg:w-[320px]
-          lg:h-screen
-          lg:sticky
-          lg:top-0
-        "
-      >
+        <aside
+          className="
+            flex
+            flex-col
+            w-[280px]
+            h-screen
+          "
+        >
 
         <SidebarContent />
 

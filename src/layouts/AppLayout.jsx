@@ -95,7 +95,6 @@ export default function AppLayout({
         min-h-screen
         flex
         bg-[#F8FAFC]
-        dark:bg-[#09090B]
         overflow-hidden
       "
     >
@@ -146,23 +145,24 @@ export default function AppLayout({
           MOBILE SIDEBAR
       ===================================================== */}
 
-      <div
-        className={`
-          fixed
-          top-0
-          left-0
-          z-50
-          h-screen
-          transition-transform
-          duration-300
-          lg:hidden
-          ${
-            mobileSidebarOpen
-              ? 'translate-x-0'
-              : '-translate-x-full'
-          }
-        `}
-      >
+        <div
+          className={`
+            fixed
+            top-0
+            left-0
+            z-50
+            h-screen
+            w-[280px]
+            transition-transform
+            duration-300
+            lg:hidden
+            ${
+              mobileSidebarOpen
+                ? 'translate-x-0'
+                : '-translate-x-full'
+            }
+          `}
+        >
 
         <Sidebar
           onLogout={
@@ -278,19 +278,19 @@ export default function AppLayout({
             PAGE CONTENT
         =================================================== */}
 
-        <main
-          className="
-            flex-1
-            overflow-y-auto
-            overflow-x-hidden
-            min-w-0
-            px-3
-            sm:px-5
-            md:px-6
-            lg:px-0
-            pb-10
-          "
-        >
+          <main
+            className="
+              flex-1
+              overflow-y-auto
+              overflow-x-hidden
+              min-w-0
+              px-2
+              sm:px-4
+              md:px-6
+              lg:px-0
+              pb-10
+            "
+          >
 
           {children}
 
