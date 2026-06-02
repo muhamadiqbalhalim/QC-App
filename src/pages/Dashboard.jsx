@@ -797,15 +797,57 @@ const fetchDashboardData = useCallback(
 
         </header>
 
-        {/* ================================================= */}
-        {/* META */}
-        {/* ================================================= */}
+        <section className="block sm:hidden">
+
+          <Card darkMode={darkMode}>
+
+            <div className="space-y-3">
+
+              <div>
+                <p className="text-xs opacity-50 font-bold">
+                  EMPLOYEE
+                </p>
+
+                <p className="font-black text-lg">
+                  {currentUser.name}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+
+                <div>
+                  <p className="text-xs opacity-50 font-bold">
+                    ID
+                  </p>
+
+                  <p className="font-bold">
+                    {currentUser.employeeId}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs opacity-50 font-bold">
+                    DEPARTMENT
+                  </p>
+
+                  <p className="font-bold">
+                    {currentUser.department}
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+          </Card>
+
+        </section>
 
         <section
           className="
-            grid
-            grid-cols-1
-            sm:grid-cols-2
+            hidden
+            sm:grid
+            grid-cols-2
             xl:grid-cols-3
             gap-4
             lg:gap-5
@@ -977,7 +1019,8 @@ const fetchDashboardData = useCallback(
                     darkMode={darkMode}
                     hover
                     className={`
-                      min-h-[150px]
+                      min-h-[110px]
+                      lg:min-h-[150px]
                       relative
                       overflow-hidden
                     `}
@@ -1063,6 +1106,8 @@ const fetchDashboardData = useCallback(
                 className="
                   xl:col-span-2
                   overflow-hidden
+                  hidden
+                  md:block
                 "
               >
 

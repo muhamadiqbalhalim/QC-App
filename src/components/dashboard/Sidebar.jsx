@@ -272,14 +272,14 @@ export default function Sidebar() {
                     font-black
                   "
                 >
-                  QC Training System
+                  QC App
                 </p>
 
               </div>
 
               <h1
                 className="
-                  text-2xl
+                  text-xl
                   font-black
                   leading-tight
                 "
@@ -311,18 +311,18 @@ export default function Sidebar() {
 
         </div>
 
-        {/* ================================================= */}
-        {/* USER */}
-        {/* ================================================= */}
+          {/* USER */}
 
-        <div
-          className="
-            px-5
-            py-5
-            border-b
-            border-white/10
-          "
-        >
+          <div
+            className="
+              hidden
+              lg:block
+              px-5
+              py-5
+              border-b
+              border-white/10
+            "
+          >
 
           <div className="flex items-start gap-4">
 
@@ -445,7 +445,7 @@ export default function Sidebar() {
             flex
             items-center
             gap-4
-            min-h-[56px]
+            min-h-[48px]
             px-4
             rounded-2xl
             font-bold
@@ -606,7 +606,7 @@ export default function Sidebar() {
           left-0
           z-[100]
           w-[90%]
-          max-w-[340px]
+          max-w-[280px]
           transition-transform
           duration-300
           lg:hidden

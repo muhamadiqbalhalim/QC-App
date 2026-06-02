@@ -265,7 +265,7 @@ export default function AppLayout({
                   dark:text-white
                 "
               >
-                Enterprise System
+                QC Training
               </h1>
 
             </div>
@@ -284,7 +284,7 @@ export default function AppLayout({
             overflow-y-auto
             overflow-x-hidden
             min-w-0
-            px-4
+            px-3
             sm:px-5
             md:px-6
             lg:px-0
