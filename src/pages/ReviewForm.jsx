@@ -33,10 +33,6 @@ import {
   db,
 } from '../config/firebase';
 
-import {
-  useTheme,
-} from '../context/ThemeContext';
-
 import useSession from '../hooks/useSession';
 
 import {
@@ -59,9 +55,6 @@ export default function ReviewForm() {
 
   const navigate =
     useNavigate();
-
-  const { darkMode } =
-    useTheme();
 
   const { getSession } =
     useSession();
@@ -487,20 +480,6 @@ export default function ReviewForm() {
 
   /**
    * =========================================================
-   * STYLES
-   * =========================================================
-   */
-
-  const styles = {
-
-    page: darkMode
-      ? 'bg-[#09090B] text-white'
-      : 'bg-[#F8FAFC] text-slate-900',
-
-  };
-
-  /**
-   * =========================================================
    * LOADING
    * =========================================================
    */
@@ -509,15 +488,16 @@ export default function ReviewForm() {
 
     return (
 
-      <div
-        className={`
-          min-h-screen
-          flex
-          items-center
-          justify-center
-          ${styles.page}
-        `}
-      >
+        <div
+          className="
+            min-h-screen
+            flex
+            items-center
+            justify-center
+            bg-[#F8FAFC]
+            text-slate-900
+          "
+        >
 
         <div className="text-center">
 
@@ -549,19 +529,20 @@ export default function ReviewForm() {
 
   return (
 
-    <div
-      className={`
-        min-h-screen
-        px-4
-        py-5
-        sm:px-6
-        sm:py-6
-        lg:px-8
-        lg:py-8
-        space-y-6
-        ${styles.page}
-      `}
-    >
+      <div
+        className="
+          min-h-screen
+          px-4
+          py-5
+          sm:px-6
+          sm:py-6
+          lg:px-8
+          lg:py-8
+          space-y-6
+          bg-[#F8FAFC]
+          text-slate-900
+        "
+      >
 
       {/* ================================================= */}
       {/* HEADER */}
@@ -628,7 +609,7 @@ export default function ReviewForm() {
 
           {/* SEARCH */}
           <Card
-            darkMode={darkMode}
+            
             padding="sm"
             className="
               flex
@@ -668,7 +649,7 @@ export default function ReviewForm() {
 
           {/* FILTER */}
           <Card
-            darkMode={darkMode}
+            
             padding="sm"
             className="
               flex
@@ -740,7 +721,7 @@ export default function ReviewForm() {
       {!filteredSubmissions.length && (
 
         <Card
-          darkMode={darkMode}
+          
           className="
             text-center
             py-12
@@ -797,7 +778,6 @@ export default function ReviewForm() {
 
               <Card
                 key={submission.id}
-                darkMode={darkMode}
                 hover
               >
 
@@ -1057,7 +1037,7 @@ export default function ReviewForm() {
                     mt-6
                     pt-5
                     border-t
-                    border-white/10
+                    border-slate-200
                     flex
                     flex-wrap
                     items-center

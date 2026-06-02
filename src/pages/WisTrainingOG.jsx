@@ -26,8 +26,6 @@ import {
 
 import { db } from '../config/firebase';
 
-import { useTheme } from '../context/ThemeContext';
-
 import { FORM_REGISTRY } from '../config/FormRegistry';
 
 import { SEVERITY } from '../config/constants/severity';
@@ -43,9 +41,6 @@ import {
 export default function WisTrainingOG({
   user: propUser,
 }) {
-
-  const { darkMode } =
-    useTheme();
 
   const navigate =
     useNavigate();
@@ -197,45 +192,6 @@ export default function WisTrainingOG({
         year: 'numeric',
       }
     );
-  };
-
-  /**
-   * =========================================================
-   * THEME STYLES
-   * =========================================================
-   */
-  const styles = {
-
-    page: darkMode
-      ? 'bg-[#0F172A] text-white'
-      : 'bg-[#F8FAFC] text-slate-900',
-
-    card: darkMode
-      ? `
-        bg-slate-900
-        border-slate-800
-      `
-      : `
-        bg-white
-        border-slate-200
-      `,
-
-    subText: darkMode
-      ? 'text-slate-400'
-      : 'text-slate-500',
-
-    filterButton: darkMode
-      ? `
-        text-slate-400
-        hover:text-white
-        border-slate-700
-      `
-      : `
-        text-slate-500
-        hover:text-slate-900
-        border-slate-300
-      `,
-
   };
 
   /**
@@ -552,7 +508,8 @@ export default function WisTrainingOG({
         duration-300
         relative
         overflow-x-hidden
-        ${styles.page}
+        bg-[#F8FAFC]
+        text-slate-900
       `}
     >
 
@@ -603,7 +560,7 @@ export default function WisTrainingOG({
               className={`
                 text-sm
                 mt-3
-                ${styles.subText}
+                text-slate-500
               `}
             >
               Operational competency &
@@ -625,7 +582,6 @@ export default function WisTrainingOG({
               tracking-widest
               w-fit
               border-slate-300
-              dark:border-slate-700
             "
           >
 
@@ -694,7 +650,11 @@ export default function WisTrainingOG({
                           text-slate-950
                           border-transparent
                         `
-                        : styles.filterButton
+                        : `
+                        text-slate-500
+                        hover:text-slate-900
+                        border-slate-300
+                      `
                     }
                   `}
                 >
@@ -718,7 +678,8 @@ export default function WisTrainingOG({
               rounded-3xl
               border
               text-center
-              ${styles.card}
+              bg-white
+              border-slate-200
             `}
           >
 
@@ -740,7 +701,8 @@ export default function WisTrainingOG({
               rounded-3xl
               border
               text-center
-              ${styles.card}
+              bg-white
+              border-slate-200
             `}
           >
 
@@ -783,7 +745,8 @@ export default function WisTrainingOG({
                     hover:-translate-y-1
                     hover:shadow-2xl
                     flex flex-col justify-between
-                    ${styles.card}
+                    bg-white
+                    border-slate-200
                   `}
                 >
 
@@ -884,7 +847,6 @@ export default function WisTrainingOG({
                       pt-5
                       border-t
                       border-slate-200
-                      dark:border-slate-800
                       flex items-end justify-between
                       gap-4
                     "

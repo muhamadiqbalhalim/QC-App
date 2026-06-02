@@ -14,8 +14,6 @@ export default function Modal({
 
   children,
 
-  darkMode = false,
-
   width = 'max-w-2xl',
 
 }) {
@@ -53,19 +51,9 @@ export default function Modal({
           border
           shadow-2xl
           overflow-hidden
-          ${
-            darkMode
-              ? `
-                bg-[#09090B]
-                border-zinc-800
-                text-white
-              `
-              : `
-                bg-white
-                border-slate-200
-                text-slate-900
-              `
-          }
+          bg-white
+          border-slate-200
+          text-slate-900
         `}
       >
 
@@ -79,7 +67,7 @@ export default function Modal({
             px-6
             py-5
             border-b
-            border-white/10
+            border-slate-200
           "
         >
 

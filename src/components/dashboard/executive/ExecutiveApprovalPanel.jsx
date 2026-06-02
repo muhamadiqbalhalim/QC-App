@@ -29,37 +29,11 @@ function ExecutiveApprovalPanel({
 
   submissions = [],
 
-  darkMode = false,
-
   onApprove,
 
   onReject,
 
 }) {
-
-  /**
-   * =========================================================
-   * STYLES
-   * =========================================================
-   */
-
-  const styles = {
-
-    card: darkMode
-      ? `
-        bg-zinc-900/80
-        border-zinc-800
-      `
-      : `
-        bg-white
-        border-slate-200
-      `,
-
-    muted: darkMode
-      ? 'text-zinc-400'
-      : 'text-slate-500',
-
-  };
 
   /**
    * =========================================================
@@ -70,14 +44,14 @@ function ExecutiveApprovalPanel({
   if (!submissions.length) {
 
     return (
-
       <section
-        className={`
+        className="
           rounded-3xl
           border
           p-8
-          ${styles.card}
-        `}
+          bg-white
+          border-slate-200
+        "
       >
 
         <div className="text-center py-10">
@@ -101,12 +75,12 @@ function ExecutiveApprovalPanel({
             No Pending Approvals
           </h2>
 
-          <p
-            className={`
-              text-sm
-              ${styles.muted}
-            `}
-          >
+            <p
+              className="
+                text-sm
+                text-slate-500
+              "
+            >
             All submitted audits
             have been reviewed.
           </p>
@@ -119,14 +93,15 @@ function ExecutiveApprovalPanel({
   }
 
   return (
-    <section
-      className={`
-        rounded-3xl
-        border
-        p-6
-        ${styles.card}
-      `}
-    >
+      <section
+        className="
+          rounded-3xl
+          border
+          p-8
+          bg-white
+          border-slate-200
+        "
+      >
 
       {/* =====================================================
           HEADER
@@ -199,15 +174,16 @@ function ExecutiveApprovalPanel({
 
             <div
               key={submission.id}
-              className={`
+              className="
                 border
                 rounded-3xl
                 p-5
                 transition-all
                 duration-300
                 hover:border-amber-500/20
-                ${styles.card}
-              `}
+                bg-white
+                border-slate-200
+              "
             >
 
               <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
@@ -325,16 +301,15 @@ function ExecutiveApprovalPanel({
 
                   {/* EXTRA INFO */}
                   <div
-                    className={`
+                    className="
                       flex
                       flex-wrap
                       items-center
                       gap-4
-                      text-xs
-                      ${styles.muted}
-                    `}
-                  >
-
+                      text-sm
+                      text-slate-500
+                    "
+            >
                     <div className="flex items-center gap-1">
 
                       <Clock3 size={12} />
@@ -367,7 +342,17 @@ function ExecutiveApprovalPanel({
                     ACTIONS
                 ================================================= */}
 
-                <div className="flex items-center gap-3 shrink-0">
+                <div
+                  className="
+                    flex
+                    flex-col
+                    sm:flex-row
+                    gap-3
+                    shrink-0
+                    w-full
+                    sm:w-auto
+                  "
+                >
 
                   {/* APPROVE */}
                   <button
@@ -377,8 +362,11 @@ function ExecutiveApprovalPanel({
                       )
                     }
                     className="
+                      w-full
+                      sm:w-auto
                       flex
                       items-center
+                      justify-center
                       gap-2
                       px-5
                       py-3
@@ -410,8 +398,11 @@ function ExecutiveApprovalPanel({
                       )
                     }
                     className="
+                      w-full
+                      sm:w-auto
                       flex
                       items-center
+                      justify-center
                       gap-2
                       px-5
                       py-3

@@ -19,8 +19,6 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import AppLayout from './layouts/AppLayout';
 
-import { useTheme } from './context/ThemeContext';
-
 import useSession from './hooks/useSession';
 
 import ReviewForm from './pages/ReviewForm';
@@ -28,15 +26,6 @@ import ReviewForm from './pages/ReviewForm';
 import ReviewSubmission from './pages/ReviewSubmission';
 
 export default function App() {
-
-  /**
-   * =========================================================
-   * THEME
-   * =========================================================
-   */
-
-  const { darkMode } =
-    useTheme();
 
   /**
    * =========================================================
@@ -81,18 +70,15 @@ export default function App() {
 
   return (
     <div
-      className={`
+      className="
         min-h-dvh
         w-full
         overflow-hidden
         transition-colors
         duration-300
-        ${
-          darkMode
-            ? 'bg-[#0F172A] text-slate-100'
-            : 'bg-[#F8FAFC] text-slate-900'
-        }
-      `}
+        bg-[#F8FAFC]
+        text-slate-900
+      "
     >
 
       {/* =====================================================
