@@ -334,27 +334,22 @@ const InspectionRow = memo(function InspectionRow({
     >
 
       {/* ID */}
-      <td
-        className="
-          sticky
-          left-0
-          z-30
-          w-[90px]
-          min-w-[90px]
-          sm:w-[110px]
-          sm:min-w-[110px]
-          p-3
-          border
-          border-slate-200
-          text-center
-          font-mono
-          font-bold
-          text-xs
-          text-slate-500
-          bg-white
-          shadow-[6px_0_10px_-8px_rgba(0,0,0,0.25)]
-        "
-      >
+        <td
+          className="
+            w-[90px]
+            min-w-[90px]
+            sm:w-[110px]
+            sm:min-w-[110px]
+            p-3
+            border
+            border-slate-200
+            text-center
+            font-mono
+            font-bold
+            text-xs
+            text-slate-500
+          "
+        >
 
         <div className="break-words leading-5">
           {row.id}
@@ -363,26 +358,20 @@ const InspectionRow = memo(function InspectionRow({
       </td>
 
       {/* ITEM */}
-      <td
-        className="
-          sticky
-          left-[90px]
-          sm:left-[110px]
-          z-20
-          w-[180px]
-          min-w-[180px]
-          sm:w-[340px]
-          sm:min-w-[340px]
-          p-4
-          border
-          border-slate-200
-          font-semibold
-          text-sm
-          sm:text-base
-          bg-white
-          shadow-[6px_0_10px_-8px_rgba(0,0,0,0.25)]
-        "
-      >
+        <td
+          className="
+            w-[180px]
+            min-w-[180px]
+            sm:w-[280px]
+            sm:min-w-[280px]
+            p-4
+            border
+            border-slate-200
+            font-semibold
+            text-sm
+            sm:text-base
+          "
+        >
 
         <div className="space-y-3">
 
@@ -873,10 +862,6 @@ function InspectionTable({
 
                 <th
                   className="
-                    sticky
-                    top-0
-                    left-0
-                    z-50
                     w-[90px]
                     min-w-[90px]
                     sm:w-[110px]
@@ -892,11 +877,6 @@ function InspectionTable({
 
                 <th
                   className="
-                    sticky
-                    top-0
-                    left-[90px]
-                    sm:left-[110px]
-                    z-40
                     w-[180px]
                     min-w-[180px]
                     sm:w-[340px]
@@ -910,31 +890,31 @@ function InspectionTable({
                   Inspection Item
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 min-w-[220px]">
+                <th className="p-4 border bg-slate-100 min-w-[220px]">
                   Criteria
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100">
+                <th className="p-4 border bg-slate-100">
                   Standard
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100">
+                <th className="p-4 border bg-slate-100">
                   Rank
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 min-w-[260px]">
+                <th className="p-4 border bg-slate-100 min-w-[260px]">
                   Key Point
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100">
+                <th className="p-4 border bg-slate-100">
                   Reference
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100 min-w-[240px]">
+                <th className="p-4 border bg-slate-100 min-w-[240px]">
                   Method
                 </th>
 
-                <th className="sticky top-0 z-10 p-4 border bg-slate-100">
+                <th className="p-4 border bg-slate-100">
                   CT
                 </th>
 
@@ -943,9 +923,6 @@ function InspectionTable({
                   <th
                     key={input.id}
                     className="
-                      sticky
-                      top-0
-                      z-10
                       p-4
                       border
                       bg-slate-100
