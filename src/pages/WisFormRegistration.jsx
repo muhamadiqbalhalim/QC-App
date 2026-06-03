@@ -42,6 +42,11 @@ import {
   TRAINING_STATUS,
 } from '../config/constants/status';
 
+import {
+  isExecutiveUser,
+  getExecutiveName,
+} from '../config/constants/roles';
+
 import DynamicFormEngine from '../components/dashboard/forms/engine/DynamicFormEngine';
 
 export default function WisFormRegistration() {
@@ -181,9 +186,6 @@ export default function WisFormRegistration() {
     if (
       !currentUser?.employeeId
     ) {
-
-      setLoading(false);
-
       return;
 
     }
@@ -217,20 +219,27 @@ export default function WisFormRegistration() {
            * LOAD SUBMITTED ANSWERS
            */
 
-          if (
-            data.answers
-          ) {
+        if (data.answers) {
 
-            setFormData((prev) => ({
+          setFormData((prev) => ({
 
-              ...prev,
+            ...prev,
 
-              inspection:
-                data.answers,
+            inspection: data.answers,
 
-            }));
+            approval: {
+              execId: data.approvedBy || '',
+            },
 
-          }
+          }));
+
+          setValidExecutive(
+            isExecutiveUser(
+              data.approvedBy || ''
+            )
+          );
+
+        }
 
         }
 
@@ -313,11 +322,57 @@ export default function WisFormRegistration() {
   const [errorMessage, setErrorMessage] =
     useState('');
 
+  const [validExecutive, setValidExecutive] =
+    useState(false);
+
   /**
    * =========================================================
    * INSPECTION SUMMARY
    * =========================================================
    */
+  const isInspectionComplete =
+        useMemo(() => {
+
+          const dataSources =
+            trainingConfig?.dataSources || {};
+
+          for (const section of Object.values(dataSources)) {
+
+            for (const row of section.rows || []) {
+
+              const answers =
+                formData.inspection?.[section.id]?.[row.id];
+
+              if (!answers) {
+                return false;
+              }
+
+              for (const input of section.inputs || []) {
+
+                const value =
+                  answers[input.id];
+
+                if (
+                  value !== 'PASS' &&
+                  value !== 'FAIL'
+                ) {
+
+                  return false;
+
+                }
+
+              }
+
+            }
+
+          }
+
+          return true;
+
+        }, [
+          formData.inspection,
+          trainingConfig,
+        ]);
 
   const inspectionSummary =
     useMemo(() => {
@@ -372,13 +427,15 @@ export default function WisFormRegistration() {
         passed,
         failed,
 
-        ready:
-          total > 0 &&
-          failed === 0,
+        ready: isInspectionComplete
 
       };
 
     }, [formData.inspection]);
+
+    const isReadOnly =
+      workflowData?.lifecycleStatus ===
+      TRAINING_STATUS.APPROVED;
 
   /**
    * =========================================================
@@ -438,18 +495,26 @@ export default function WisFormRegistration() {
   const handleApprovalChange =
     (event) => {
 
+    const value =
+      event.target.value
+        .trim()
+        .toUpperCase();
+
       setFormData((prev) => ({
 
         ...prev,
 
         approval: {
 
-          execId:
-            event.target.value,
+          execId: value,
 
         },
 
       }));
+
+      setValidExecutive(
+        isExecutiveUser(value)
+      );
 
     };
 
@@ -479,9 +544,26 @@ export default function WisFormRegistration() {
         );
 
         return;
-
       }
 
+      if (!isExecutiveUser(executiveId)) {
+
+        setErrorMessage(
+          'Invalid Executive ID.'
+        );
+
+        return;
+      }
+
+      if (!isInspectionComplete) {
+
+        setErrorMessage(
+          'Please complete all inspection items before submission.'
+        );
+
+        return;
+
+        }
       setIsSubmitting(true);
 
       try {
@@ -531,6 +613,11 @@ export default function WisFormRegistration() {
 
             approvedBy:
               executiveId,
+
+            approvedByName:
+              getExecutiveName(
+                executiveId
+              ),
 
             approvedAt:
               null,
@@ -693,9 +780,38 @@ export default function WisFormRegistration() {
                   Audit Rejected
                 </h3>
 
+                <div className="space-y-2">
+
                 <p className="text-sm opacity-80">
                   Executive review requires correction or resubmission.
                 </p>
+
+                {workflowData?.rejectionReason && (
+
+                  <div
+                    className="
+                      mt-3
+                      p-3
+                      rounded-xl
+                      bg-red-500/10
+                      border
+                      border-red-500/20
+                    "
+                  >
+
+                    <p className="text-xs font-bold mb-1">
+                      Rejection Reason
+                    </p>
+
+                    <p className="text-sm">
+                      {workflowData.rejectionReason}
+                    </p>
+
+                  </div>
+
+                )}
+
+              </div>
 
               </div>
 
@@ -1024,12 +1140,15 @@ export default function WisFormRegistration() {
         handleInspectionChange={
           handleInspectionChange
         }
+        readOnly={isReadOnly}
       />
 
       {/* ===================================================== */}
       {/* SUBMIT */}
       {/* ===================================================== */}
 
+        {workflowData?.lifecycleStatus !==
+         TRAINING_STATUS.APPROVED && (
       <div
         className="
           sticky
@@ -1088,7 +1207,33 @@ export default function WisFormRegistration() {
             <p className="text-xs opacity-60 mt-2">
               Executive responsible for approval
             </p>
+            {formData.approval.execId && (
+            <p
+              className={`
+                text-xs
+                mt-2
+                font-medium
+                ${
+                  validExecutive
+                    ? 'text-emerald-600'
+                    : 'text-red-500'
+                }
+              `}
+            >
+              {validExecutive
+                ? '✓ Executive Found'
+                : '✕ Executive ID not found'}
+            </p>
 
+          )}
+
+          {!isInspectionComplete && (
+
+            <p className="text-xs text-amber-600 mt-2">
+              Complete all inspection items before submission.
+            </p>
+
+          )}
           </div>
 
           {errorMessage && (
@@ -1103,7 +1248,11 @@ export default function WisFormRegistration() {
 
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={
+            isSubmitting ||
+            !validExecutive ||
+            !isInspectionComplete
+          }
           className="
             w-full
             sm:w-auto
@@ -1145,7 +1294,7 @@ export default function WisFormRegistration() {
         </button>
 
       </div>
-
+   )}
     </div>
   );
 }

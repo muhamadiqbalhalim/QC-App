@@ -242,6 +242,43 @@ export default function ReviewForm() {
       statusFilter,
     ]);
 
+    const reviewStats =
+      useMemo(() => {
+
+        return {
+
+          pending:
+            submissions.filter(
+              (item) =>
+                item.lifecycleStatus ===
+                TRAINING_STATUS.SUBMITTED
+            ).length,
+
+          approved:
+            submissions.filter(
+              (item) =>
+                item.lifecycleStatus ===
+                TRAINING_STATUS.APPROVED
+            ).length,
+
+          rejected:
+            submissions.filter(
+              (item) =>
+                item.lifecycleStatus ===
+                TRAINING_STATUS.REJECTED
+            ).length,
+
+          attention:
+            submissions.filter(
+              (item) =>
+                item.lifecycleStatus ===
+                TRAINING_STATUS.SUBMITTED &&
+                (item.inspectionSummary?.failed || 0) > 0
+            ).length,
+
+        };
+
+      }, [submissions]);
   /**
    * =========================================================
    * APPROVE
@@ -718,6 +755,57 @@ export default function ReviewForm() {
       {/* EMPTY */}
       {/* ================================================= */}
 
+      <div
+      className="
+        grid
+        grid-cols-2
+        lg:grid-cols-4
+        gap-4
+      "
+    >
+
+      <Card>
+        <p className="text-xs opacity-60">
+          Pending
+        </p>
+
+        <h2 className="text-3xl font-black mt-2">
+          {reviewStats.pending}
+        </h2>
+      </Card>
+
+      <Card>
+        <p className="text-xs opacity-60">
+          Approved
+        </p>
+
+        <h2 className="text-3xl font-black mt-2">
+          {reviewStats.approved}
+        </h2>
+      </Card>
+
+      <Card>
+        <p className="text-xs opacity-60">
+          Rejected
+        </p>
+
+        <h2 className="text-3xl font-black mt-2">
+          {reviewStats.rejected}
+        </h2>
+      </Card>
+
+      <Card>
+        <p className="text-xs opacity-60">
+          Attention
+        </p>
+
+        <h2 className="text-3xl font-black mt-2 text-red-500">
+          {reviewStats.attention}
+        </h2>
+      </Card>
+
+    </div>
+
       {!filteredSubmissions.length && (
 
         <Card
@@ -776,10 +864,17 @@ export default function ReviewForm() {
 
             return (
 
-              <Card
-                key={submission.id}
-                hover
-              >
+                  <Card
+                    key={submission.id}
+                    hover
+                    className={
+                      failCount > 0 &&
+                      submission.lifecycleStatus ===
+                        TRAINING_STATUS.SUBMITTED
+                        ? 'border-red-300 bg-red-50'
+                        : ''
+                    }
+                  >
 
                 {/* TOP */}
                 <div
@@ -831,8 +926,35 @@ export default function ReviewForm() {
                         }
                       </p>
 
-                    </div>
+                      <p className="opacity-60">
+                        Department:
+                        {' '}
+                        {submission.department || 'N/A'}
+                      </p>
 
+                    </div>
+                    <div>
+
+                    <p
+                      className="
+                        text-xs
+                        font-semibold
+                        opacity-50
+                        mb-2
+                      "
+                    >
+                      Assigned Executive
+                    </p>
+
+                    <p className="font-bold">
+                      {submission.approvedByName || 'Executive'}
+                    </p>
+
+                    <p className="opacity-60">
+                      ID: {submission.approvedBy}
+                    </p>
+
+                  </div>
                     {/* TRAINING */}
                     <div>
 
@@ -958,7 +1080,11 @@ export default function ReviewForm() {
 
                     {/* REVIEW */}
                     <Button
-                      variant="info"
+                      variant={
+                        failCount > 0
+                          ? 'danger'
+                          : 'info'
+                      }
                       size="lg"
                       icon={Eye}
                       onClick={() =>
@@ -968,7 +1094,9 @@ export default function ReviewForm() {
                       }
                     >
 
-                      Review Submission
+                      {failCount > 0
+                        ? 'Review Critical'
+                        : 'Review Submission'}
 
                     </Button>
 

@@ -38,9 +38,12 @@ export const ROLES = {
  * =========================================================
  */
 
-export const EXECUTIVE_IDS = [
-  '2500',
-];
+export const EXECUTIVES = {
+  '2500': {
+    name: 'Executive QC',
+    role: 'EXECUTIVE',
+  },
+};
 
 /**
  * =========================================================
@@ -72,11 +75,9 @@ export const detectUserRole = (
   String(employeeId ?? '')
     .trim();
 
-  return EXECUTIVE_IDS.includes(
-    normalizedId
-  )
-    ? ROLES.EXECUTIVE
-    : ROLES.OPERATOR;
+return EXECUTIVES[normalizedId]
+  ? ROLES.EXECUTIVE
+  : ROLES.OPERATOR;
 
 };
 
@@ -106,9 +107,25 @@ export const isExecutiveUser = (
   employeeId
 ) => {
 
-  return EXECUTIVE_IDS.includes(
-  String(employeeId ?? '')
-    .trim()
-);
+  const normalizedId =
+    String(employeeId ?? '')
+      .trim();
+
+  return !!EXECUTIVES[normalizedId];
+
+};
+
+export const getExecutiveName = (
+  employeeId
+) => {
+
+  const normalizedId =
+    String(employeeId ?? '')
+      .trim();
+
+  return (
+    EXECUTIVES[normalizedId]?.name ||
+    'Unknown Executive'
+  );
 
 };

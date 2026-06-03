@@ -165,141 +165,175 @@ export default function ReviewSubmission() {
    * =========================================================
    */
 
-  const handleApprove =
-    async () => {
+ const handleApprove =
+  async () => {
 
-      const confirmed =
-        window.confirm(
-          'Approve this submission?'
+    const confirmed =
+      window.confirm(
+        'Approve this submission?'
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+
+      setActionLoading(true);
+
+      const approvedAt =
+        new Date().toISOString();
+
+      const progressRef =
+        doc(
+          db,
+          'user_progress',
+          submission.id
         );
 
-      if (!confirmed) {
-        return;
-      }
+      await updateDoc(
+        progressRef,
+        {
+          lifecycleStatus:
+            TRAINING_STATUS.APPROVED,
 
-      try {
+          approvedAt,
 
-        setActionLoading(true);
+          rejectionReason:
+            null,
 
-        const progressRef =
-          doc(
-            db,
-            'user_progress',
-            submission.id
-          );
+          rejectedAt:
+            null,
 
-        await updateDoc(
-          progressRef,
-          {
+          updatedAt:
+            approvedAt,
+        }
+      );
 
-            lifecycleStatus:
-              TRAINING_STATUS.APPROVED,
+      setSubmission(
+        (previous) => ({
 
-            approvedAt:
-              new Date().toISOString(),
+          ...previous,
 
-            updatedAt:
-              new Date().toISOString(),
+          lifecycleStatus:
+            TRAINING_STATUS.APPROVED,
 
-          }
+          approvedAt,
+
+          rejectionReason:
+            null,
+
+          rejectedAt:
+            null,
+
+        })
+      );
+
+    } catch (error) {
+
+      console.error(
+        'Approve failed:',
+        error
+      );
+
+    } finally {
+
+      setActionLoading(false);
+
+    }
+
+  };
+
+/**
+ * =========================================================
+ * REJECT
+ * =========================================================
+ */
+
+const handleReject =
+  async () => {
+
+    const confirmed =
+      window.confirm(
+        'Reject this submission?'
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const reason =
+      window.prompt(
+        'Enter rejection reason:'
+      );
+
+    if (
+      !reason ||
+      !reason.trim()
+    ) {
+      return;
+    }
+
+    try {
+
+      setActionLoading(true);
+
+      const rejectedAt =
+        new Date().toISOString();
+
+      const progressRef =
+        doc(
+          db,
+          'user_progress',
+          submission.id
         );
 
-        setSubmission(
-          (previous) => ({
+      await updateDoc(
+        progressRef,
+        {
+          lifecycleStatus:
+            TRAINING_STATUS.REJECTED,
 
-            ...previous,
+          rejectionReason:
+            reason.trim(),
 
-            lifecycleStatus:
-              TRAINING_STATUS.APPROVED,
+          rejectedAt,
 
-          })
-        );
+          updatedAt:
+            rejectedAt,
+        }
+      );
 
-      } catch (error) {
+      setSubmission(
+        (previous) => ({
 
-        console.error(
-          'Approve failed:',
-          error
-        );
+          ...previous,
 
-      } finally {
+          lifecycleStatus:
+            TRAINING_STATUS.REJECTED,
 
-        setActionLoading(false);
+          rejectionReason:
+            reason.trim(),
 
-      }
+          rejectedAt,
 
-    };
+        })
+      );
 
-  /**
-   * =========================================================
-   * REJECT
-   * =========================================================
-   */
+    } catch (error) {
 
-  const handleReject =
-    async () => {
+      console.error(
+        'Reject failed:',
+        error
+      );
 
-      const confirmed =
-        window.confirm(
-          'Reject this submission?'
-        );
+    } finally {
 
-      if (!confirmed) {
-        return;
-      }
+      setActionLoading(false);
 
-      try {
+    }
 
-        setActionLoading(true);
-
-        const progressRef =
-          doc(
-            db,
-            'user_progress',
-            submission.id
-          );
-
-        await updateDoc(
-          progressRef,
-          {
-
-            lifecycleStatus:
-              TRAINING_STATUS.REJECTED,
-
-            rejectedAt:
-              new Date().toISOString(),
-
-            updatedAt:
-              new Date().toISOString(),
-
-          }
-        );
-
-        setSubmission(
-          (previous) => ({
-
-            ...previous,
-
-            lifecycleStatus:
-              TRAINING_STATUS.REJECTED,
-
-          })
-        );
-
-      } catch (error) {
-
-        console.error(
-          'Reject failed:',
-          error
-        );
-
-      } finally {
-
-        setActionLoading(false);
-
-      }
-
-    };
+  };
 
   /**
    * =========================================================
@@ -364,7 +398,15 @@ export default function ReviewSubmission() {
       ?.inspectionSummary
       ?.failed || 0;
 
-
+  const completionRate =
+    submission?.inspectionSummary?.total
+      ? Math.round(
+          (
+            submission.inspectionSummary.passed /
+            submission.inspectionSummary.total
+          ) * 100
+        )
+      : 0;
   /**
    * =========================================================
    * LOADING
@@ -659,7 +701,7 @@ export default function ReviewSubmission() {
             grid
             grid-cols-1
             sm:grid-cols-2
-            xl:grid-cols-4
+            xl:grid-cols-5
             gap-5
           "
         >
@@ -732,28 +774,127 @@ export default function ReviewSubmission() {
             </h2>
 
           </div>
-
           <div>
 
-            <p
-              className="
-                text-xs
-                font-semibold
-                opacity-50
-                mb-2
-              "
-            >
-              Submitted
+          <p
+            className="
+              text-xs
+              font-semibold
+              opacity-50
+              mb-2
+            "
+          >
+            Assigned Executive
+          </p>
+
+          <h2 className="font-bold text-lg">
+            {submission.approvedByName || 'N/A'}
+          </h2>
+
+          <p className="opacity-60">
+            ID: {submission.approvedBy}
+          </p>
+
+        </div>
+
+        <div>
+
+          <p
+            className="
+              text-xs
+              font-semibold
+              opacity-50
+              mb-2
+            "
+          >
+            Submitted
+          </p>
+
+          <h2 className="font-bold text-base leading-7">
+            {new Date(
+              submission.completedAt
+            ).toLocaleString()}
+          </h2>
+
+        </div>
+
+        </div>
+
+      </Card>
+
+      <Card>
+
+        <p
+          className="
+            text-xs
+            font-semibold
+            opacity-50
+            mb-3
+          "
+        >
+          Workflow Status
+        </p>
+
+        <div className="space-y-2">
+
+          <p>
+            Status:
+            {' '}
+            {getStatusLabel(
+              submission.lifecycleStatus
+            )}
+          </p>
+
+          {submission.approvedAt && (
+
+            <p>
+              Approved:
+              {' '}
+              {new Date(
+                submission.approvedAt
+              ).toLocaleString()}
             </p>
 
-            <h2 className="font-bold text-base leading-7">
+          )}
+
+          {submission.rejectedAt && (
+
+            <p>
+              Rejected:
+              {' '}
               {new Date(
-                submission.completedAt
+                submission.rejectedAt
               ).toLocaleString()}
-            </h2>
+            </p>
 
-          </div>
+          )}
+          {submission.rejectionReason && (
 
+            <div className="pt-2">
+
+              <p
+                className="
+                  text-xs
+                  font-semibold
+                  opacity-50
+                  mb-1
+                "
+              >
+                Rejection Reason
+              </p>
+
+              <p
+                className="
+                  text-red-600
+                  font-medium
+                "
+              >
+                {submission.rejectionReason}
+              </p>
+
+            </div>
+
+          )}
         </div>
 
       </Card>
@@ -873,35 +1014,31 @@ export default function ReviewSubmission() {
 
         </Card>
 
-        <Card
-          
-          hover
+        <Card hover>
+
+        <p
+          className="
+            text-xs
+            font-semibold
+            opacity-50
+            mb-4
+          "
         >
+          Completion
+        </p>
 
-          <p
-            className="
-              text-xs
-              font-semibold
-              opacity-50
-              mb-4
-            "
-          >
-            Training ID
-          </p>
+        <h2
+          className="
+            text-3xl
+            sm:text-4xl
+            font-black
+            text-blue-500
+          "
+        >
+          {completionRate}%
+        </h2>
 
-          <h2
-            className="
-              text-lg
-              font-black
-              break-words
-            "
-          >
-            {
-              submission.trainingId
-            }
-          </h2>
-
-        </Card>
+      </Card>
 
       </div>
 
@@ -963,6 +1100,14 @@ export default function ReviewSubmission() {
                   tab
                 ]?.rows || [];
 
+            const sectionFailCount =
+              inspectionRows.filter(
+                (row) =>
+                  sectionData?.[
+                    row.id
+                  ]?.insp === 'FAIL'
+              ).length;
+
             return (
 
               <div
@@ -1008,18 +1153,31 @@ export default function ReviewSubmission() {
 
                   </div>
 
+                  <div className="flex flex-wrap gap-2">
+
                   <Badge
                     variant="warning"
                     size="lg"
                   >
-
-                    {
-                      inspectionRows.length
-                    }
+                    {inspectionRows.length}
                     {' '}
-                    Inspection Items
-
+                    Items
                   </Badge>
+
+                  {sectionFailCount > 0 && (
+
+                    <Badge
+                      variant="danger"
+                      size="lg"
+                    >
+                      {sectionFailCount}
+                      {' '}
+                      Failed
+                    </Badge>
+
+                  )}
+
+                </div>
 
                 </div>
 
@@ -1032,7 +1190,7 @@ export default function ReviewSubmission() {
                       const result =
                         sectionData?.[
                           item.id
-                        ]?.inspRes;
+                        ]?.insp;
 
                       const isPass =
                         result ===
