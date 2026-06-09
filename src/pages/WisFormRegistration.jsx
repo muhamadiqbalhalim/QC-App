@@ -1,15 +1,6 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-  useCallback,
-} from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 
-import {
-  Navigate,
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import {
   ArrowLeft,
@@ -18,44 +9,26 @@ import {
   CheckCircle2,
   Clock3,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
-import {
-  doc,
-  setDoc,
-  getDoc,
-} from 'firebase/firestore';
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
-import {
-  db,
-} from '../config/firebase';
+import { db } from "../config/firebase";
 
-import {
-  FORM_REGISTRY,
-} from '../config/FormRegistry';
+import { FORM_REGISTRY } from "../config/FormRegistry";
 
-import {
-  STORAGE_KEYS,
-} from '../config/constants/storageKeys';
+import { STORAGE_KEYS } from "../config/constants/storageKeys";
 
-import {
-  TRAINING_STATUS,
-} from '../config/constants/status';
+import { TRAINING_STATUS } from "../config/constants/status";
 
-import {
-  isExecutiveUser,
-  getExecutiveName,
-} from '../config/constants/roles';
+import { isExecutiveUser, getExecutiveName } from "../config/constants/roles";
 
-import DynamicFormEngine from '../components/dashboard/forms/engine/DynamicFormEngine';
+import DynamicFormEngine from "../components/dashboard/forms/engine/DynamicFormEngine";
 
 export default function WisFormRegistration() {
+  const navigate = useNavigate();
 
-  const navigate =
-    useNavigate();
-
-  const { trainingId } =
-    useParams();
+  const { trainingId } = useParams();
 
   /**
    * =========================================================
@@ -63,14 +36,7 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const trainingConfig =
-    useMemo(
-      () =>
-        FORM_REGISTRY[
-          trainingId
-        ],
-      [trainingId]
-    );
+  const trainingConfig = useMemo(() => FORM_REGISTRY[trainingId], [trainingId]);
 
   /**
    * =========================================================
@@ -78,24 +44,13 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const [currentUser] =
-    useState(() => {
-
-      try {
-
-        return JSON.parse(
-          localStorage.getItem(
-            STORAGE_KEYS.SESSION
-          ) || '{}'
-        );
-
-      } catch {
-
-        return {};
-
-      }
-
-    });
+  const [currentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSION) || "{}");
+    } catch {
+      return {};
+    }
+  });
 
   /**
    * =========================================================
@@ -103,11 +58,9 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const draftKey =
-    `training_draft_${trainingId}_${currentUser?.employeeId}`;
+  const draftKey = `training_draft_${trainingId}_${currentUser?.employeeId}`;
 
-  const tabKey =
-    `training_tab_${trainingId}_${currentUser?.employeeId}`;
+  const tabKey = `training_tab_${trainingId}_${currentUser?.employeeId}`;
 
   /**
    * =========================================================
@@ -115,8 +68,7 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const [activeTab, setActiveTab] =
-    useState('LH');
+  const [activeTab, setActiveTab] = useState("LH");
 
   /**
    * =========================================================
@@ -124,8 +76,7 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const [workflowData, setWorkflowData] =
-    useState(null);
+  const [workflowData, setWorkflowData] = useState(null);
 
   /**
    * =========================================================
@@ -134,27 +85,12 @@ export default function WisFormRegistration() {
    */
 
   useEffect(() => {
+    const savedTab = localStorage.getItem(tabKey);
 
-    const savedTab =
-      localStorage.getItem(
-        tabKey
-      );
-
-    if (
-      savedTab &&
-      trainingConfig?.tabs?.includes(
-        savedTab
-      )
-    ) {
-
+    if (savedTab && trainingConfig?.tabs?.includes(savedTab)) {
       setActiveTab(savedTab);
-
     }
-
-  }, [
-    tabKey,
-    trainingConfig,
-  ]);
+  }, [tabKey, trainingConfig]);
 
   /**
    * =========================================================
@@ -163,16 +99,8 @@ export default function WisFormRegistration() {
    */
 
   useEffect(() => {
-
-    localStorage.setItem(
-      tabKey,
-      activeTab
-    );
-
-  }, [
-    activeTab,
-    tabKey,
-  ]);
+    localStorage.setItem(tabKey, activeTab);
+  }, [activeTab, tabKey]);
 
   /**
    * =========================================================
@@ -180,82 +108,47 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const fetchWorkflowStatus =
-    useCallback(async () => {
-
-    if (
-      !currentUser?.employeeId
-    ) {
+  const fetchWorkflowStatus = useCallback(async () => {
+    if (!currentUser?.employeeId) {
       return;
-
     }
 
-      try {
+    try {
+      const progressRef = doc(
+        db,
+        "user_progress",
+        `${currentUser.employeeId}_${trainingId}`,
+      );
 
-        const progressRef =
-          doc(
-            db,
-            'user_progress',
-            `${currentUser.employeeId}_${trainingId}`
-          );
+      const snapshot = await getDoc(progressRef);
 
-        const snapshot =
-          await getDoc(
-            progressRef
-          );
+      if (snapshot.exists()) {
+        const data = snapshot.data();
 
-        if (
-          snapshot.exists()
-        ) {
+        setWorkflowData(data);
 
-          const data =
-            snapshot.data();
-
-          setWorkflowData(
-            data
-          );
-
-          /**
-           * LOAD SUBMITTED ANSWERS
-           */
+        /**
+         * LOAD SUBMITTED ANSWERS
+         */
 
         if (data.answers) {
-
           setFormData((prev) => ({
-
             ...prev,
 
             inspection: data.answers,
 
             approval: {
-              execId: data.approvedBy || '',
+              execId: data.approvedBy || "",
             },
-
           }));
 
-          setValidExecutive(
-            isExecutiveUser(
-              data.approvedBy || ''
-            )
-          );
-
+          setValidExecutive(isExecutiveUser(data.approvedBy || ""));
         }
-
-        }
-
-      } catch (error) {
-
-        console.error(
-          'Workflow fetch failed:',
-          error
-        );
-
       }
-
-    }, [
-      currentUser,
-      trainingId,
-    ]);
+    } catch (error) {
+      console.error("Workflow fetch failed:", error);
+    }
+  }, [currentUser, trainingId]);
 
   /**
    * =========================================================
@@ -264,9 +157,7 @@ export default function WisFormRegistration() {
    */
 
   useEffect(() => {
-
     fetchWorkflowStatus();
-
   }, [fetchWorkflowStatus]);
 
   /**
@@ -275,40 +166,25 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const [formData, setFormData] =
-    useState({
+  const [formData, setFormData] = useState({
+    meta: {
+      name: currentUser?.name || "N/A",
 
-      meta: {
+      OperatorNo: currentUser?.employeeId || "N/A",
 
-        name:
-          currentUser?.name ||
-          'N/A',
+      department: currentUser?.department || "N/A",
 
-        OperatorNo:
-          currentUser?.employeeId ||
-          'N/A',
+      role: currentUser?.role || "OPERATOR",
 
-        department:
-          currentUser?.department ||
-          'N/A',
+      date: new Date().toISOString().split("T")[0],
+    },
 
-        role:
-          currentUser?.role ||
-          'OPERATOR',
+    inspection: {},
 
-        date: new Date()
-          .toISOString()
-          .split('T')[0],
-
-      },
-
-      inspection: {},
-
-      approval: {
-        execId: '',
-      },
-
-    });
+    approval: {
+      execId: "",
+    },
+  });
 
   /**
    * =========================================================
@@ -316,126 +192,76 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [errorMessage, setErrorMessage] =
-    useState('');
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [validExecutive, setValidExecutive] =
-    useState(false);
+  const [validExecutive, setValidExecutive] = useState(false);
 
   /**
    * =========================================================
    * INSPECTION SUMMARY
    * =========================================================
    */
-  const isInspectionComplete =
-        useMemo(() => {
+  const isInspectionComplete = useMemo(() => {
+    const dataSources = trainingConfig?.dataSources || {};
 
-          const dataSources =
-            trainingConfig?.dataSources || {};
+    for (const section of Object.values(dataSources)) {
+      for (const row of section.rows || []) {
+        const answers = formData.inspection?.[section.id]?.[row.id];
 
-          for (const section of Object.values(dataSources)) {
+        if (!answers) {
+          return false;
+        }
 
-            for (const row of section.rows || []) {
+        for (const input of section.inputs || []) {
+          const value = answers[input.id];
 
-              const answers =
-                formData.inspection?.[section.id]?.[row.id];
+          if (value !== "PASS" && value !== "FAIL") {
+            return false;
+          }
+        }
+      }
+    }
 
-              if (!answers) {
-                return false;
-              }
+    return true;
+  }, [formData.inspection, trainingConfig]);
 
-              for (const input of section.inputs || []) {
+  const inspectionSummary = useMemo(() => {
+    let total = 0;
+    let passed = 0;
+    let failed = 0;
 
-                const value =
-                  answers[input.id];
-
-                if (
-                  value !== 'PASS' &&
-                  value !== 'FAIL'
-                ) {
-
-                  return false;
-
-                }
-
-              }
-
-            }
-
+    Object.values(formData.inspection || {}).forEach((section) => {
+      Object.values(section || {}).forEach((row) => {
+        Object.values(row || {}).forEach((value) => {
+          if (!value) {
+            return;
           }
 
-          return true;
+          total++;
 
-        }, [
-          formData.inspection,
-          trainingConfig,
-        ]);
+          if (value === "PASS") {
+            passed++;
+          }
 
-  const inspectionSummary =
-    useMemo(() => {
-
-      let total = 0;
-      let passed = 0;
-      let failed = 0;
-
-      Object.values(
-        formData.inspection || {}
-      ).forEach((section) => {
-
-        Object.values(
-          section || {}
-        ).forEach((row) => {
-
-          Object.values(
-            row || {}
-          ).forEach((value) => {
-
-            if (!value) {
-              return;
-            }
-
-            total++;
-
-            if (
-              value === 'PASS'
-            ) {
-
-              passed++;
-
-            }
-
-            if (
-              value === 'FAIL'
-            ) {
-
-              failed++;
-
-            }
-
-          });
-
+          if (value === "FAIL") {
+            failed++;
+          }
         });
-
       });
+    });
 
-      return {
+    return {
+      total,
+      passed,
+      failed,
 
-        total,
-        passed,
-        failed,
+      ready: isInspectionComplete,
+    };
+  }, [formData.inspection]);
 
-        ready: isInspectionComplete
-
-      };
-
-    }, [formData.inspection]);
-
-    const isReadOnly =
-      workflowData?.lifecycleStatus ===
-      TRAINING_STATUS.APPROVED;
+  const isReadOnly = workflowData?.lifecycleStatus === TRAINING_STATUS.APPROVED;
 
   /**
    * =========================================================
@@ -443,48 +269,25 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const handleInspectionChange =
-    (
-      sectionId,
-      rowId,
-      fieldId,
-      value
-    ) => {
+  const handleInspectionChange = (sectionId, rowId, fieldId, value) => {
+    setFormData((prev) => ({
+      ...prev,
 
-      setFormData((prev) => ({
+      inspection: {
+        ...prev.inspection,
 
-        ...prev,
+        [sectionId]: {
+          ...prev.inspection?.[sectionId],
 
-        inspection: {
+          [rowId]: {
+            ...prev.inspection?.[sectionId]?.[rowId],
 
-          ...prev.inspection,
-
-          [sectionId]: {
-
-            ...prev.inspection?.[
-              sectionId
-            ],
-
-            [rowId]: {
-
-              ...prev.inspection?.[
-                sectionId
-              ]?.[
-                rowId
-              ],
-
-              [fieldId]:
-                value,
-
-            },
-
+            [fieldId]: value,
           },
-
         },
-
-      }));
-
-    };
+      },
+    }));
+  };
 
   /**
    * =========================================================
@@ -492,31 +295,19 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const handleApprovalChange =
-    (event) => {
+  const handleApprovalChange = (event) => {
+    const value = event.target.value.trim().toUpperCase();
 
-    const value =
-      event.target.value
-        .trim()
-        .toUpperCase();
+    setFormData((prev) => ({
+      ...prev,
 
-      setFormData((prev) => ({
+      approval: {
+        execId: value,
+      },
+    }));
 
-        ...prev,
-
-        approval: {
-
-          execId: value,
-
-        },
-
-      }));
-
-      setValidExecutive(
-        isExecutiveUser(value)
-      );
-
-    };
+    setValidExecutive(isExecutiveUser(value));
+  };
 
   /**
    * =========================================================
@@ -524,185 +315,122 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const handleSubmit =
-    async () => {
+  const handleSubmit = async () => {
+    if (isSubmitting) {
+      return;
+    }
 
-      if (isSubmitting) {
-        return;
-      }
+    setErrorMessage("");
 
-      setErrorMessage('');
+    const executiveId = formData.approval.execId.trim();
 
-      const executiveId =
-        formData.approval.execId
-          .trim();
+    if (!executiveId) {
+      setErrorMessage("Executive ID is required.");
 
-      if (!executiveId) {
+      return;
+    }
 
-        setErrorMessage(
-          'Executive ID is required.'
-        );
+    if (!isExecutiveUser(executiveId)) {
+      setErrorMessage("Invalid Executive ID.");
 
-        return;
-      }
+      return;
+    }
 
-      if (!isExecutiveUser(executiveId)) {
+    if (!isInspectionComplete) {
+      setErrorMessage(
+        "Please complete all inspection items before submission.",
+      );
 
-        setErrorMessage(
-          'Invalid Executive ID.'
-        );
+      return;
+    }
+    setIsSubmitting(true);
 
-        return;
-      }
+    try {
+      const progressRef = doc(
+        db,
+        "user_progress",
+        `${currentUser.employeeId}_${trainingId}`,
+      );
 
-      if (!isInspectionComplete) {
+      await setDoc(
+        progressRef,
+        {
+          userId: currentUser?.id || "N/A",
 
-        setErrorMessage(
-          'Please complete all inspection items before submission.'
-        );
+          employeeId: currentUser?.employeeId || "N/A",
 
-        return;
+          employeeName: currentUser?.name || "Unknown",
 
-        }
-      setIsSubmitting(true);
+          department: currentUser?.department || "N/A",
 
-      try {
+          role: currentUser?.role || "OPERATOR",
 
-        const progressRef =
-          doc(
-            db,
-            'user_progress',
-            `${currentUser.employeeId}_${trainingId}`
-          );
+          trainingId,
 
-        await setDoc(
-          progressRef,
-          {
+          trainingTitle: trainingConfig.title,
 
-            userId:
-              currentUser?.id ||
-              'N/A',
+          severity: trainingConfig.severity || "Standard",
 
-            employeeId:
-              currentUser?.employeeId ||
-              'N/A',
+          lifecycleStatus: TRAINING_STATUS.SUBMITTED,
 
-            employeeName:
-              currentUser?.name ||
-              'Unknown',
+          approvedBy: executiveId,
 
-            department:
-              currentUser?.department ||
-              'N/A',
+          approvedByName: getExecutiveName(executiveId),
 
-            role:
-              currentUser?.role ||
-              'OPERATOR',
+          approvedAt: null,
 
-            trainingId,
+          approvedByExecutive: null,
 
-            trainingTitle:
-              trainingConfig.title,
+          rejectedAt: null,
 
-            severity:
-              trainingConfig.severity ||
-              'Standard',
+          rejectionReason: null,
 
-            lifecycleStatus:
-              TRAINING_STATUS.SUBMITTED,
+          answers: formData.inspection,
 
-            approvedBy:
-              executiveId,
+          meta: formData.meta,
 
-            approvedByName:
-              getExecutiveName(
-                executiveId
-              ),
+          inspectionSummary,
 
-            approvedAt:
-              null,
+          completedAt: new Date().toISOString(),
 
-            approvedByExecutive:
-              null,
+          createdAt: workflowData?.createdAt || new Date().toISOString(),
 
-            rejectedAt:
-              null,
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          merge: true,
+        },
+      );
 
-            rejectionReason:
-              null,
+      /**
+       * CLEAR DRAFT
+       */
 
-            answers:
-              formData.inspection,
+      localStorage.removeItem(draftKey);
 
-            meta:
-              formData.meta,
+      localStorage.removeItem(tabKey);
 
-            inspectionSummary,
+      /**
+       * REFRESH STATUS
+       */
 
-            completedAt:
-              new Date().toISOString(),
+      fetchWorkflowStatus();
 
-            createdAt:
-              workflowData?.createdAt ||
-              new Date().toISOString(),
+      /**
+       * REDIRECT
+       */
 
-            updatedAt:
-              new Date().toISOString(),
+      setTimeout(() => {
+        navigate("/training-og");
+      }, 1200);
+    } catch (error) {
+      console.error("Submission Error:", error);
 
-          },
-          {
-            merge: true,
-          }
-        );
-
-        /**
-         * CLEAR DRAFT
-         */
-
-        localStorage.removeItem(
-          draftKey
-        );
-
-        localStorage.removeItem(
-          tabKey
-        );
-
-        /**
-         * REFRESH STATUS
-         */
-
-        fetchWorkflowStatus();
-
-        /**
-         * REDIRECT
-         */
-
-        setTimeout(() => {
-
-          navigate(
-            '/training-og'
-          );
-
-        }, 1200);
-
-      } catch (error) {
-
-        console.error(
-          'Submission Error:',
-          error
-        );
-
-        setErrorMessage(
-          'Failed to submit audit.'
-        );
-
-      } finally {
-
-        setIsSubmitting(false);
-
-      }
-
-    };
+      setErrorMessage("Failed to submit audit.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   /**
    * =========================================================
@@ -710,84 +438,54 @@ export default function WisFormRegistration() {
    * =========================================================
    */
 
-  const renderWorkflowBanner =
-    () => {
+  const renderWorkflowBanner = () => {
+    if (!workflowData) {
+      return null;
+    }
 
-      if (!workflowData) {
-        return null;
-      }
+    const status = workflowData.lifecycleStatus;
 
-      const status =
-        workflowData.lifecycleStatus;
+    /**
+     * APPROVED
+     */
 
-      /**
-       * APPROVED
-       */
+    if (status === TRAINING_STATUS.APPROVED) {
+      return (
+        <div className="p-5 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
+          <div className="flex items-start gap-4">
+            <CheckCircle2 size={22} />
 
-      if (
-        status ===
-        TRAINING_STATUS.APPROVED
-      ) {
+            <div>
+              <h3 className="font-black text-lg mb-2">Approved by Executive</h3>
 
-        return (
-
-          <div className="p-5 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
-
-            <div className="flex items-start gap-4">
-
-              <CheckCircle2 size={22} />
-
-              <div>
-
-                <h3 className="font-black text-lg mb-2">
-                  Approved by Executive
-                </h3>
-
-                <p className="text-sm opacity-80">
-                  This inspection audit has been approved.
-                </p>
-
-              </div>
-
+              <p className="text-sm opacity-80">
+                This inspection audit has been approved.
+              </p>
             </div>
-
           </div>
+        </div>
+      );
+    }
 
-        );
+    /**
+     * REJECTED
+     */
 
-      }
+    if (status === TRAINING_STATUS.REJECTED) {
+      return (
+        <div className="p-5 rounded-3xl border border-red-500/20 bg-red-500/10 text-red-400">
+          <div className="flex items-start gap-4">
+            <XCircle size={22} />
 
-      /**
-       * REJECTED
-       */
+            <div>
+              <h3 className="font-black text-lg mb-2">Audit Rejected</h3>
 
-      if (
-        status ===
-        TRAINING_STATUS.REJECTED
-      ) {
-
-        return (
-
-          <div className="p-5 rounded-3xl border border-red-500/20 bg-red-500/10 text-red-400">
-
-            <div className="flex items-start gap-4">
-
-              <XCircle size={22} />
-
-              <div>
-
-                <h3 className="font-black text-lg mb-2">
-                  Audit Rejected
-                </h3>
-
-                <div className="space-y-2">
-
+              <div className="space-y-2">
                 <p className="text-sm opacity-80">
                   Executive review requires correction or resubmission.
                 </p>
 
                 {workflowData?.rejectionReason && (
-
                   <div
                     className="
                       mt-3
@@ -798,71 +496,44 @@ export default function WisFormRegistration() {
                       border-red-500/20
                     "
                   >
+                    <p className="text-xs font-bold mb-1">Rejection Reason</p>
 
-                    <p className="text-xs font-bold mb-1">
-                      Rejection Reason
-                    </p>
-
-                    <p className="text-sm">
-                      {workflowData.rejectionReason}
-                    </p>
-
+                    <p className="text-sm">{workflowData.rejectionReason}</p>
                   </div>
-
                 )}
-
               </div>
-
-              </div>
-
             </div>
-
           </div>
+        </div>
+      );
+    }
 
-        );
+    /**
+     * SUBMITTED
+     */
 
-      }
+    if (status === TRAINING_STATUS.SUBMITTED) {
+      return (
+        <div className="p-5 rounded-3xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
+          <div className="flex items-start gap-4">
+            <Clock3 size={22} />
 
-      /**
-       * SUBMITTED
-       */
+            <div>
+              <h3 className="font-black text-lg mb-2">
+                Pending Executive Approval
+              </h3>
 
-      if (
-        status ===
-        TRAINING_STATUS.SUBMITTED
-      ) {
-
-        return (
-
-          <div className="p-5 rounded-3xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
-
-            <div className="flex items-start gap-4">
-
-              <Clock3 size={22} />
-
-              <div>
-
-                <h3 className="font-black text-lg mb-2">
-                  Pending Executive Approval
-                </h3>
-
-                <p className="text-sm opacity-80">
-                  Audit submitted successfully and waiting for executive review.
-                </p>
-
-              </div>
-
+              <p className="text-sm opacity-80">
+                Audit submitted successfully and waiting for executive review.
+              </p>
             </div>
-
           </div>
+        </div>
+      );
+    }
 
-        );
-
-      }
-
-      return null;
-
-    };
+    return null;
+  };
 
   /**
    * =========================================================
@@ -871,18 +542,12 @@ export default function WisFormRegistration() {
    */
 
   if (!trainingConfig) {
-
-    return (
-      <Navigate
-        to="/dashboard"
-        replace
-      />
-    );
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
-      <div
-        className="
+    <div
+      className="
           min-h-screen
           w-full
           max-w-full
@@ -899,8 +564,7 @@ export default function WisFormRegistration() {
           bg-[#F8FAFC]
           text-slate-900
         "
-      >
-
+    >
       {renderWorkflowBanner()}
 
       {/* ===================================================== */}
@@ -917,11 +581,8 @@ export default function WisFormRegistration() {
           sm:justify-between
         "
       >
-
         <button
-          onClick={() =>
-            navigate('/training-og')
-          }
+          onClick={() => navigate("/training-og")}
           className="
             flex
             items-center
@@ -933,11 +594,8 @@ export default function WisFormRegistration() {
             transition-all
           "
         >
-
           <ArrowLeft size={16} />
-
           Back to Trainings
-
         </button>
 
         <div
@@ -948,7 +606,6 @@ export default function WisFormRegistration() {
             gap-3
           "
         >
-
           <div
             className="
               flex
@@ -967,9 +624,7 @@ export default function WisFormRegistration() {
           >
             {trainingConfig.severity}
           </div>
-
         </div>
-
       </div>
 
       {/* ===================================================== */}
@@ -986,10 +641,7 @@ export default function WisFormRegistration() {
           border-slate-200
         "
       >
-
-        <p className="text-sm text-amber-500 font-bold mb-3">
-          Training Audit
-        </p>
+        <p className="text-sm text-amber-500 font-bold mb-3">Training Audit</p>
 
         <h1
           className="
@@ -1013,27 +665,20 @@ export default function WisFormRegistration() {
         {/* ================================================= */}
 
         <div className="flex flex-wrap items-center gap-3 mt-6">
-
           <div className="px-4 py-2 rounded-2xl border border-slate-300  text-xs font-bold opacity-70">
             {trainingConfig.code}
           </div>
 
           <div className="px-4 py-2 rounded-2xl border border-blue-500/20 bg-blue-500/10 text-blue-400 text-xs font-bold">
-            Total:
-            {' '}
-            {inspectionSummary.total}
+            Total: {inspectionSummary.total}
           </div>
 
           <div className="px-4 py-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-bold">
-            PASS:
-            {' '}
-            {inspectionSummary.passed}
+            PASS: {inspectionSummary.passed}
           </div>
 
           <div className="px-4 py-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-red-400 text-xs font-bold">
-            FAIL:
-            {' '}
-            {inspectionSummary.failed}
+            FAIL: {inspectionSummary.failed}
           </div>
 
           <div
@@ -1059,15 +704,9 @@ export default function WisFormRegistration() {
               }
             `}
           >
-
-            {inspectionSummary.ready
-              ? 'READY FOR REVIEW'
-              : 'REQUIRES REVIEW'}
-
+            {inspectionSummary.ready ? "READY FOR REVIEW" : "REQUIRES REVIEW"}
           </div>
-
         </div>
-
       </div>
 
       {/* ===================================================== */}
@@ -1075,7 +714,6 @@ export default function WisFormRegistration() {
       {/* ===================================================== */}
 
       {trainingConfig.tabs && (
-
         <div
           className="
             flex
@@ -1085,16 +723,11 @@ export default function WisFormRegistration() {
             scrollbar-thin
           "
         >
-
-          {trainingConfig.tabs.map(
-            (tab) => (
-
-              <button
-                key={tab}
-                onClick={() =>
-                  setActiveTab(tab)
-                }
-                className={`
+          {trainingConfig.tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`
                   min-w-[120px]
                   min-h-[52px]
                   px-6
@@ -1116,15 +749,11 @@ export default function WisFormRegistration() {
                       `
                   }
                 `}
-              >
-                {tab}
-              </button>
-
-            )
-          )}
-
+            >
+              {tab}
+            </button>
+          ))}
         </div>
-
       )}
 
       {/* ===================================================== */}
@@ -1137,9 +766,7 @@ export default function WisFormRegistration() {
         formData={formData}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        handleInspectionChange={
-          handleInspectionChange
-        }
+        handleInspectionChange={handleInspectionChange}
         readOnly={isReadOnly}
       />
 
@@ -1147,10 +774,9 @@ export default function WisFormRegistration() {
       {/* SUBMIT */}
       {/* ===================================================== */}
 
-        {workflowData?.lifecycleStatus !==
-         TRAINING_STATUS.APPROVED && (
-      <div
-        className="
+      {workflowData?.lifecycleStatus !== TRAINING_STATUS.APPROVED && (
+        <div
+          className="
           sticky
           bottom-0
           z-40
@@ -1169,27 +795,17 @@ export default function WisFormRegistration() {
           bg-white/95
           border-slate-200
         "
-      >
+        >
+          <div className="space-y-3 w-full">
+            <div>
+              <p className="text-sm font-bold mb-2">Executive Approval ID</p>
 
-        <div className="space-y-3 w-full">
-
-          <div>
-
-            <p className="text-sm font-bold mb-2">
-              Executive Approval ID
-            </p>
-
-            <input
-              type="text"
-              value={
-                formData.approval
-                  .execId
-              }
-              onChange={
-                handleApprovalChange
-              }
-              placeholder="Enter executive ID"
-              className="
+              <input
+                type="text"
+                value={formData.approval.execId}
+                onChange={handleApprovalChange}
+                placeholder="Enter executive ID"
+                className="
                 w-full
                 sm:min-w-[260px]
                 px-5
@@ -1202,58 +818,42 @@ export default function WisFormRegistration() {
                 outline-none
                 focus:border-amber-500/30
               "
-            />
+              />
 
-            <p className="text-xs opacity-60 mt-2">
-              Executive responsible for approval
-            </p>
-            {formData.approval.execId && (
-            <p
-              className={`
+              <p className="text-xs opacity-60 mt-2">
+                Executive responsible for approval
+              </p>
+              {formData.approval.execId && (
+                <p
+                  className={`
                 text-xs
                 mt-2
                 font-medium
-                ${
-                  validExecutive
-                    ? 'text-emerald-600'
-                    : 'text-red-500'
-                }
+                ${validExecutive ? "text-emerald-600" : "text-red-500"}
               `}
-            >
-              {validExecutive
-                ? '✓ Executive Found'
-                : '✕ Executive ID not found'}
-            </p>
+                >
+                  {validExecutive
+                    ? "✓ Executive Found"
+                    : "✕ Executive ID not found"}
+                </p>
+              )}
 
-          )}
+              {!isInspectionComplete && (
+                <p className="text-xs text-amber-600 mt-2">
+                  Complete all inspection items before submission.
+                </p>
+              )}
+            </div>
 
-          {!isInspectionComplete && (
-
-            <p className="text-xs text-amber-600 mt-2">
-              Complete all inspection items before submission.
-            </p>
-
-          )}
+            {errorMessage && (
+              <p className="text-sm text-red-500 font-medium">{errorMessage}</p>
+            )}
           </div>
 
-          {errorMessage && (
-
-            <p className="text-sm text-red-500 font-medium">
-              {errorMessage}
-            </p>
-
-          )}
-
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          disabled={
-            isSubmitting ||
-            !validExecutive ||
-            !isInspectionComplete
-          }
-          className="
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !validExecutive || !isInspectionComplete}
+            className="
             w-full
             sm:w-auto
             sm:min-w-[220px]
@@ -1274,27 +874,21 @@ export default function WisFormRegistration() {
             tracking-wider
             transition-all
           "
-        >
-
-          {isSubmitting ? (
-            <>
-              <Loader2
-                size={18}
-                className="animate-spin"
-              />
-              Submitting...
-            </>
-          ) : (
-            <>
-              <ShieldCheck size={18} />
-              Submit Audit
-            </>
-          )}
-
-        </button>
-
-      </div>
-   )}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <ShieldCheck size={18} />
+                Submit Audit
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

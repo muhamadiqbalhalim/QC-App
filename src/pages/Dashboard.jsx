@@ -1,13 +1,6 @@
-import React, {
-  useMemo,
-  useEffect,
-  useState,
-  useCallback,
-} from 'react';
+import React, { useMemo, useEffect, useState, useCallback } from "react";
 
-import {
-  useNavigate,
-} from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 import {
   User,
@@ -21,7 +14,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
-} from 'lucide-react';
+} from "lucide-react";
 
 import {
   collection,
@@ -30,76 +23,53 @@ import {
   getDocs,
   doc,
   updateDoc,
-} from 'firebase/firestore';
+} from "firebase/firestore";
 
-import {
-  db,
-} from '../config/firebase';
+import { db } from "../config/firebase";
 
-import useSession from '../hooks/useSession';
+import useSession from "../hooks/useSession";
 
-import {
-  FORM_REGISTRY,
-} from '../config/FormRegistry';
+import { FORM_REGISTRY } from "../config/FormRegistry";
 
-import {
-  ROLE_LABELS,
-  isExecutive,
-} from '../config/constants/roles';
+import { ROLE_LABELS, isExecutive } from "../config/constants/roles";
 
-import {
-  SEVERITY,
-  getSeverityColor,
-} from '../config/constants/severity';
+import { SEVERITY } from "../config/constants/severity";
 
-import {
-  TRAINING_STATUS,
-} from '../config/constants/status';
+import { TRAINING_STATUS } from "../config/constants/status";
 
-import MetaCards from '../components/dashboard/MetaCards';
+import MetaCards from "../components/dashboard/MetaCards";
 
-import RadarChartCard from '../components/dashboard/RadarChartCard';
+import RadarChartCard from "../components/dashboard/RadarChartCard";
 
-import ExecutiveApprovalPanel from '../components/dashboard/executive/ExecutiveApprovalPanel';
+import ExecutiveApprovalPanel from "../components/dashboard/executive/ExecutiveApprovalPanel";
 
-import {
-  Card,
-  Button,
-  Badge,
-} from '../components/ui';
+import { Card, Button, Badge } from "../components/ui";
 
-export default function Dashboard({
-  user: propUser,
-}) {
-
+export default function Dashboard({ user: propUser }) {
   /**
    * =========================================================
    * STATES
    * =========================================================
    */
 
-  const [progressData, setProgressData] =
-    useState([]);
+  const [progressData, setProgressData] = useState([]);
 
-  const [
-    executivePendingApprovals,
-    setExecutivePendingApprovals,
-  ] = useState([]);
+  const [companyTrainings, setCompanyTrainings] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [executivePendingApprovals, setExecutivePendingApprovals] = useState(
+    [],
+  );
+
+  const [loading, setLoading] = useState(true);
 
   /**
    * =========================================================
    * HOOKS
    * =========================================================
    */
-  const {
-    getSession,
-  } = useSession();
+  const { getSession } = useSession();
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
   /**
    * =========================================================
@@ -108,21 +78,17 @@ export default function Dashboard({
    */
 
   const currentUser =
-    propUser &&
-    Object.keys(propUser).length > 0
+    propUser && Object.keys(propUser).length > 0
       ? propUser
       : getSession() || {};
 
-    /**
-     * =========================================================
-     * EXECUTIVE MODE
-     * =========================================================
-     */
+  /**
+   * =========================================================
+   * EXECUTIVE MODE
+   * =========================================================
+   */
 
-    const executiveMode =
-      isExecutive(
-        currentUser.role
-      );
+  const executiveMode = isExecutive(currentUser.role);
 
   /**
    * =========================================================
@@ -130,119 +96,79 @@ export default function Dashboard({
    * =========================================================
    */
 
-const fetchDashboardData = useCallback(
-  async () => {
+  const fetchDashboardData = useCallback(async () => {
+    if (!currentUser?.employeeId) {
+      setLoading(false);
+      return;
+    }
 
-  if (
-    !currentUser?.employeeId
-  ) {
-    setLoading(false);
-    return;
-  }
+    try {
+      setLoading(true);
 
-      try {
+      /**
+       * USER PROGRESS
+       */
 
-        setLoading(true);
+      const userProgressQuery = query(
+        collection(db, "user_progress"),
+        where("employeeId", "==", currentUser.employeeId),
+      );
 
-        /**
-         * USER PROGRESS
-         */
+      const userProgressSnapshot = await getDocs(userProgressQuery);
 
-        const userProgressQuery =
-          query(
-            collection(
-              db,
-              'user_progress'
-            ),
-            where(
-              'employeeId',
-              '==',
-              currentUser.employeeId
-            )
-          );
+      const userProgress = userProgressSnapshot.docs.map((document) => ({
+        id: document.id,
 
-        const userProgressSnapshot =
-          await getDocs(
-            userProgressQuery
-          );
+        ...document.data(),
+      }));
 
-        const userProgress =
-          userProgressSnapshot.docs.map(
-            (document) => ({
+      setProgressData(userProgress);
 
-              id: document.id,
+      /**
+       * COMPANY TRAININGS
+       */
 
-              ...document.data(),
+      const trainingQuery = query(
+        collection(db, "trainings"),
+        where("allowedDepartments", "array-contains", currentUser.department),
+      );
 
-            })
-          );
+      const trainingSnapshot = await getDocs(trainingQuery);
 
-        setProgressData(
-          userProgress
+      const trainingList = trainingSnapshot.docs.map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }));
+
+      setCompanyTrainings(trainingList);
+
+      /**
+       * EXECUTIVE APPROVALS
+       */
+
+      if (executiveMode) {
+        const approvalQuery = query(
+          collection(db, "user_progress"),
+          where("approvedBy", "==", currentUser.employeeId),
+          where("lifecycleStatus", "==", TRAINING_STATUS.SUBMITTED),
         );
 
-        /**
-         * EXECUTIVE APPROVALS
-         */
+        const approvalSnapshot = await getDocs(approvalQuery);
 
-        if (executiveMode) {
+        const approvals = approvalSnapshot.docs.map((document) => ({
+          id: document.id,
 
-          const approvalQuery =
-            query(
-              collection(
-                db,
-                'user_progress'
-              ),
-              where(
-                'approvedBy',
-                '==',
-                currentUser.employeeId
-              ),
-              where(
-                'lifecycleStatus',
-                '==',
-                TRAINING_STATUS.SUBMITTED
-              )
-            );
+          ...document.data(),
+        }));
 
-          const approvalSnapshot =
-            await getDocs(
-              approvalQuery
-            );
-
-          const approvals =
-            approvalSnapshot.docs.map(
-              (document) => ({
-
-                id: document.id,
-
-                ...document.data(),
-
-              })
-            );
-
-          setExecutivePendingApprovals(
-            approvals
-          );
-
-        }
-
-      } catch (error) {
-
-        console.error(
-          'Dashboard fetch failed:',
-          error
-        );
-
-      } finally {
-
-        setLoading(false);
-
+        setExecutivePendingApprovals(approvals);
       }
-
-    }, 
-    [currentUser, executiveMode]
-  );
+    } catch (error) {
+      console.error("Dashboard fetch failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser, executiveMode]);
 
   /**
    * =========================================================
@@ -260,16 +186,11 @@ const fetchDashboardData = useCallback(
    * =========================================================
    */
 
-  const completedTrainings =
-    useMemo(() => {
-
-      return progressData.filter(
-        (item) =>
-          item.lifecycleStatus ===
-          TRAINING_STATUS.APPROVED
-      );
-
-    }, [progressData]);
+  const completedTrainings = useMemo(() => {
+    return progressData.filter(
+      (item) => item.lifecycleStatus === TRAINING_STATUS.APPROVED,
+    );
+  }, [progressData]);
 
   /**
    * =========================================================
@@ -277,10 +198,7 @@ const fetchDashboardData = useCallback(
    * =========================================================
    */
 
-  const totalTrainings =
-    Object.keys(
-      FORM_REGISTRY
-    ).length;
+  const totalTrainings = Object.keys(FORM_REGISTRY).length;
 
   /**
    * =========================================================
@@ -290,12 +208,7 @@ const fetchDashboardData = useCallback(
 
   const completionPercentage =
     totalTrainings > 0
-      ? Math.round(
-          (
-            completedTrainings.length /
-            totalTrainings
-          ) * 100
-        )
+      ? Math.round((completedTrainings.length / totalTrainings) * 100)
       : 0;
 
   /**
@@ -304,25 +217,15 @@ const fetchDashboardData = useCallback(
    * =========================================================
    */
 
-  const radarSkills =
-    useMemo(() => {
+  const radarSkills = useMemo(() => {
+    const mappedSkills = {};
 
-      const mappedSkills = {};
+    completedTrainings.forEach((training) => {
+      mappedSkills[training.trainingId] = training.finalScore || 0;
+    });
 
-      completedTrainings.forEach(
-        (training) => {
-
-          mappedSkills[
-            training.trainingId
-          ] =
-            training.finalScore || 0;
-
-        }
-      );
-
-      return mappedSkills;
-
-    }, [completedTrainings]);
+    return mappedSkills;
+  }, [completedTrainings]);
 
   /**
    * =========================================================
@@ -330,33 +233,18 @@ const fetchDashboardData = useCallback(
    * =========================================================
    */
 
-  const averageSkillScore =
-    useMemo(() => {
+  const averageSkillScore = useMemo(() => {
+    if (!completedTrainings.length) {
+      return 0;
+    }
 
-      if (
-        !completedTrainings.length
-      ) {
+    const total = completedTrainings.reduce(
+      (accumulator, item) => accumulator + Number(item.finalScore || 0),
+      0,
+    );
 
-        return 0;
-
-      }
-
-      const total =
-        completedTrainings.reduce(
-          (accumulator, item) =>
-            accumulator +
-            Number(
-              item.finalScore || 0
-            ),
-          0
-        );
-
-      return Math.round(
-        total /
-        completedTrainings.length
-      );
-
-    }, [completedTrainings]);
+    return Math.round(total / completedTrainings.length);
+  }, [completedTrainings]);
 
   /**
    * =========================================================
@@ -364,62 +252,55 @@ const fetchDashboardData = useCallback(
    * =========================================================
    */
 
-  const liveUrgentTrainings =
-    useMemo(() => {
+  const liveUrgentTrainings = useMemo(() => {
+    const today = new Date();
 
-      const completedIds =
-        completedTrainings.map(
-          (training) =>
-            training.trainingId
+    return [...companyTrainings]
+
+      .map((training) => {
+        const trainingDate = new Date(training.dateString);
+
+        const diffDays = Math.ceil(
+          (trainingDate - today) / (1000 * 60 * 60 * 24),
         );
 
-      return Object.entries(
-        FORM_REGISTRY
-      )
+        let urgency = "UPCOMING";
 
-        .filter(
-          ([
-            trainingId,
-            trainingConfig,
-          ]) => {
+        if (diffDays < 0) {
+          urgency = "OVERDUE";
+        } else if (diffDays <= 3) {
+          urgency = "URGENT";
+        }
 
-            const isNotCompleted =
-              !completedIds.includes(
-                trainingId
-              );
+        return {
+          id: training.id,
 
-            const isHighPriority =
-              trainingConfig.severity ===
-                SEVERITY.CRITICAL ||
-              trainingConfig.severity ===
-                SEVERITY.HIGH;
+          title: training.name,
 
-            return (
-              isNotCompleted &&
-              isHighPriority
-            );
+          date: training.dateString,
 
-          }
-        )
+          location: training.where,
 
-        .map(
-          ([
-            trainingId,
-            trainingConfig,
-          ]) => ({
+          urgency,
 
-            id: trainingId,
+          diffDays,
+        };
+      })
 
-            title:
-              trainingConfig.title,
+      .sort((a, b) => {
+        if (a.urgency === "OVERDUE" && b.urgency !== "OVERDUE") {
+          return -1;
+        }
 
-            severity:
-              trainingConfig.severity,
+        if (b.urgency === "OVERDUE" && a.urgency !== "OVERDUE") {
+          return 1;
+        }
 
-          })
-        );
+        return a.diffDays - b.diffDays;
+      })
 
-    }, [completedTrainings]);
+      .slice(0, 5);
+  }, [companyTrainings]);
 
   /**
    * =========================================================
@@ -427,49 +308,25 @@ const fetchDashboardData = useCallback(
    * =========================================================
    */
 
-  const handleApprove =
-    async (submission) => {
+  const handleApprove = async (submission) => {
+    try {
+      const progressRef = doc(db, "user_progress", submission.id);
 
-      try {
+      await updateDoc(progressRef, {
+        lifecycleStatus: TRAINING_STATUS.APPROVED,
 
-        const progressRef =
-          doc(
-            db,
-            'user_progress',
-            submission.id
-          );
+        approvedAt: new Date().toISOString(),
 
-        await updateDoc(
-          progressRef,
-          {
+        approvedByExecutive: currentUser.employeeId,
 
-            lifecycleStatus:
-              TRAINING_STATUS.APPROVED,
+        updatedAt: new Date().toISOString(),
+      });
 
-            approvedAt:
-              new Date().toISOString(),
-
-            approvedByExecutive:
-              currentUser.employeeId,
-
-            updatedAt:
-              new Date().toISOString(),
-
-          }
-        );
-
-        fetchDashboardData();
-
-      } catch (error) {
-
-        console.error(
-          'Approval failed:',
-          error
-        );
-
-      }
-
-    };
+      fetchDashboardData();
+    } catch (error) {
+      console.error("Approval failed:", error);
+    }
+  };
 
   /**
    * =========================================================
@@ -477,49 +334,25 @@ const fetchDashboardData = useCallback(
    * =========================================================
    */
 
-  const handleReject =
-    async (submission) => {
+  const handleReject = async (submission) => {
+    try {
+      const progressRef = doc(db, "user_progress", submission.id);
 
-      try {
+      await updateDoc(progressRef, {
+        lifecycleStatus: TRAINING_STATUS.REJECTED,
 
-        const progressRef =
-          doc(
-            db,
-            'user_progress',
-            submission.id
-          );
+        rejectedAt: new Date().toISOString(),
 
-        await updateDoc(
-          progressRef,
-          {
+        approvedByExecutive: currentUser.employeeId,
 
-            lifecycleStatus:
-              TRAINING_STATUS.REJECTED,
+        updatedAt: new Date().toISOString(),
+      });
 
-            rejectedAt:
-              new Date().toISOString(),
-
-            approvedByExecutive:
-              currentUser.employeeId,
-
-            updatedAt:
-              new Date().toISOString(),
-
-          }
-        );
-
-        fetchDashboardData();
-
-      } catch (error) {
-
-        console.error(
-          'Rejection failed:',
-          error
-        );
-
-      }
-
-    };
+      fetchDashboardData();
+    } catch (error) {
+      console.error("Rejection failed:", error);
+    }
+  };
 
   /**
    * =========================================================
@@ -528,63 +361,46 @@ const fetchDashboardData = useCallback(
    */
 
   const kpiCards = [
-
     {
-      icon:
-        ClipboardCheck,
+      icon: ClipboardCheck,
 
-      label:
-        'Completed',
+      label: "Completed",
 
-      value:
-        completedTrainings.length,
+      value: completedTrainings.length,
 
-      variant:
-        'default',
+      variant: "default",
     },
 
     {
-      icon:
-        Activity,
+      icon: Activity,
 
-      label:
-        'Completion',
+      label: "Completion",
 
-      value:
-        `${completionPercentage}%`,
+      value: `${completionPercentage}%`,
 
-      variant:
-        'primary',
+      variant: "primary",
     },
 
     {
-      icon:
-        Award,
+      icon: Award,
 
-      label:
-        'Avg Score',
+      label: "Avg Score",
 
-      value:
-        `${averageSkillScore}%`,
+      value: `${averageSkillScore}%`,
 
-      variant:
-        'success',
+      variant: "success",
     },
 
     {
-      icon:
-        ShieldAlert,
+      icon: ShieldAlert,
 
-      label:
-        'Pending',
+      label: "Pending",
 
-      value:
-        liveUrgentTrainings.length,
+      value: liveUrgentTrainings.filter((item) => item.urgency !== "UPCOMING")
+        .length,
 
-      variant:
-        'danger',
+      variant: "danger",
     },
-
   ];
 
   /**
@@ -594,21 +410,17 @@ const fetchDashboardData = useCallback(
    */
 
   if (loading) {
-
     return (
-
-        <div
-          className="
+      <div
+        className="
             min-h-screen
             transition-all
             duration-500
             bg-[#F8FAFC]
             text-slate-900
           "
-        >
-
+      >
         <div className="text-center">
-
           <div
             className="
               w-14
@@ -623,20 +435,13 @@ const fetchDashboardData = useCallback(
             "
           />
 
-          <p className="text-sm opacity-60">
-            Loading dashboard...
-          </p>
-
+          <p className="text-sm opacity-60">Loading dashboard...</p>
         </div>
-
       </div>
-
     );
-
   }
 
   return (
-
     <div
       className="
         min-h-screen
@@ -646,7 +451,6 @@ const fetchDashboardData = useCallback(
         text-slate-900
       "
     >
-
       <main
         className="
           px-4
@@ -660,7 +464,6 @@ const fetchDashboardData = useCallback(
           lg:space-y-8
         "
       >
-
         {/* ================================================= */}
         {/* HEADER */}
         {/* ================================================= */}
@@ -675,16 +478,10 @@ const fetchDashboardData = useCallback(
             lg:justify-between
           "
         >
-
           {/* LEFT */}
           <div className="min-w-0">
-
             <div className="flex items-center gap-2 mb-3">
-
-              <Sparkles
-                size={16}
-                className="text-amber-500"
-              />
+              <Sparkles size={16} className="text-amber-500" />
 
               <p
                 className="
@@ -695,11 +492,8 @@ const fetchDashboardData = useCallback(
                   font-black
                 "
               >
-                {executiveMode
-                  ? 'Executive Dashboard'
-                  : 'QC Training System'}
+                {executiveMode ? "Executive Dashboard" : "QC Training System"}
               </p>
-
             </div>
 
             <h1
@@ -712,19 +506,11 @@ const fetchDashboardData = useCallback(
                 break-words
               "
             >
-
-              Welcome,
-              {' '}
-
+              Welcome,{" "}
               <span className="text-amber-500">
-
-                {currentUser.name ||
-                  'Operator'}
-
+                {currentUser.name || "Operator"}
               </span>
-
             </h1>
-
           </div>
 
           {/* RIGHT */}
@@ -736,67 +522,36 @@ const fetchDashboardData = useCallback(
               flex-wrap
             "
           >
-
-            <Badge
-              variant="warning"
-              size="lg"
-            >
-
-              {
-                ROLE_LABELS[
-                  currentUser.role
-                ]
-              }
-
+            <Badge variant="warning" size="lg">
+              {ROLE_LABELS[currentUser.role]}
             </Badge>
           </div>
-
         </header>
 
         <section className="block sm:hidden">
-
           <Card>
-
             <div className="space-y-3">
-
               <div>
-                <p className="text-xs opacity-50 font-bold">
-                  EMPLOYEE
-                </p>
+                <p className="text-xs opacity-50 font-bold">EMPLOYEE</p>
 
-                <p className="font-black text-lg">
-                  {currentUser.name}
-                </p>
+                <p className="font-black text-lg">{currentUser.name}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-
                 <div>
-                  <p className="text-xs opacity-50 font-bold">
-                    ID
-                  </p>
+                  <p className="text-xs opacity-50 font-bold">ID</p>
 
-                  <p className="font-bold">
-                    {currentUser.employeeId}
-                  </p>
+                  <p className="font-bold">{currentUser.employeeId}</p>
                 </div>
 
                 <div>
-                  <p className="text-xs opacity-50 font-bold">
-                    DEPARTMENT
-                  </p>
+                  <p className="text-xs opacity-50 font-bold">DEPARTMENT</p>
 
-                  <p className="font-bold">
-                    {currentUser.department}
-                  </p>
+                  <p className="font-bold">{currentUser.department}</p>
                 </div>
-
               </div>
-
             </div>
-
           </Card>
-
         </section>
 
         <section
@@ -809,7 +564,6 @@ const fetchDashboardData = useCallback(
             lg:gap-5
           "
         >
-
           <MetaCards
             icon={User}
             label="EMPLOYEE NAME"
@@ -827,7 +581,6 @@ const fetchDashboardData = useCallback(
             label="DEPARTMENT"
             value={currentUser.department}
           />
-
         </section>
 
         {/* ================================================= */}
@@ -835,14 +588,9 @@ const fetchDashboardData = useCallback(
         {/* ================================================= */}
 
         {executiveMode && (
-
           <>
-
             {/* SUMMARY */}
-            <Card
-              hover
-            >
-
+            <Card hover>
               <div
                 className="
                   flex
@@ -853,15 +601,9 @@ const fetchDashboardData = useCallback(
                   gap-5
                 "
               >
-
                 <div>
-
                   <div className="flex items-center gap-2 mb-3">
-
-                    <ShieldCheck
-                      size={16}
-                      className="text-amber-500"
-                    />
+                    <ShieldCheck size={16} className="text-amber-500" />
 
                     <p
                       className="
@@ -874,7 +616,6 @@ const fetchDashboardData = useCallback(
                     >
                       Pending Reviews
                     </p>
-
                   </div>
 
                   <h2
@@ -883,15 +624,12 @@ const fetchDashboardData = useCallback(
                       font-black
                     "
                   >
-                    {
-                      executivePendingApprovals.length
-                    }
+                    {executivePendingApprovals.length}
                   </h2>
 
                   <p className="text-sm opacity-60 mt-3">
                     Awaiting executive validation
                   </p>
-
                 </div>
 
                 <div
@@ -901,41 +639,29 @@ const fetchDashboardData = useCallback(
                     gap-3
                   "
                 >
-
                   <Badge
                     variant={
                       executivePendingApprovals.length > 0
-                        ? 'danger'
-                        : 'success'
+                        ? "danger"
+                        : "success"
                     }
                     size="lg"
                   >
-
-                    {
-                      executivePendingApprovals.length > 0
-                        ? 'Action Required'
-                        : 'All Clear'
-                    }
-
+                    {executivePendingApprovals.length > 0
+                      ? "Action Required"
+                      : "All Clear"}
                   </Badge>
-
                 </div>
-
               </div>
-
             </Card>
 
             {/* APPROVAL PANEL */}
             <ExecutiveApprovalPanel
-              submissions={
-                executivePendingApprovals
-              }
+              submissions={executivePendingApprovals}
               onApprove={handleApprove}
               onReject={handleReject}
             />
-
           </>
-
         )}
 
         {/* ================================================= */}
@@ -943,9 +669,7 @@ const fetchDashboardData = useCallback(
         {/* ================================================= */}
 
         {!executiveMode && (
-
           <>
-
             {/* KPI */}
             <section
               className="
@@ -957,14 +681,10 @@ const fetchDashboardData = useCallback(
                 lg:gap-5
               "
             >
-
               {kpiCards.map((card) => {
-
-                const Icon =
-                  card.icon;
+                const Icon = card.icon;
 
                 return (
-
                   <Card
                     key={card.label}
                     hover
@@ -975,7 +695,6 @@ const fetchDashboardData = useCallback(
                       overflow-hidden
                     `}
                   >
-
                     <div
                       className="
                         flex
@@ -986,9 +705,7 @@ const fetchDashboardData = useCallback(
                         z-10
                       "
                     >
-
                       <div className="min-w-0">
-
                         <p
                           className="
                             text-xs
@@ -1012,7 +729,6 @@ const fetchDashboardData = useCallback(
                         >
                           {card.value}
                         </h2>
-
                       </div>
 
                       <div
@@ -1024,19 +740,12 @@ const fetchDashboardData = useCallback(
                           shrink-0
                         "
                       >
-
                         <Icon size={22} />
-
                       </div>
-
                     </div>
-
                   </Card>
-
                 );
-
               })}
-
             </section>
 
             {/* MAIN CONTENT */}
@@ -1049,7 +758,6 @@ const fetchDashboardData = useCallback(
                 lg:gap-5
               "
             >
-
               {/* RADAR */}
               <Card
                 className="
@@ -1059,24 +767,14 @@ const fetchDashboardData = useCallback(
                   md:block
                 "
               >
-
-                <RadarChartCard
-                  skills={radarSkills}
-                />
-
+                <RadarChartCard skills={radarSkills} />
               </Card>
 
               {/* PENDING */}
               <Card>
-
                 <div className="mb-5">
-
                   <div className="flex items-center gap-2 mb-3">
-
-                    <AlertTriangle
-                      size={16}
-                      className="text-amber-500"
-                    />
+                    <AlertTriangle size={16} className="text-amber-500" />
 
                     <p
                       className="
@@ -1089,7 +787,6 @@ const fetchDashboardData = useCallback(
                     >
                       Pending Trainings
                     </p>
-
                   </div>
 
                   <h2
@@ -1100,29 +797,34 @@ const fetchDashboardData = useCallback(
                   >
                     Action Required
                   </h2>
-
                 </div>
 
                 <div className="space-y-4">
-
-                  {liveUrgentTrainings.map(
-                    (training) => {
-
-                      const severityColor =
-                        getSeverityColor(
-                          training.severity
-                        );
-
-                      return (
-
-                        <button
-                          key={training.id}
-                          onClick={() =>
-                            navigate(
-                              `/registration/${training.id}`
-                            )
+                  {liveUrgentTrainings.map((training) => {
+                    const urgencyStyle =
+                      training.urgency === "OVERDUE"
+                        ? {
+                            bg: "bg-red-500/10",
+                            text: "text-red-500",
+                            border: "border-red-500/20",
                           }
-                          className={`
+                        : training.urgency === "URGENT"
+                          ? {
+                              bg: "bg-amber-500/10",
+                              text: "text-amber-500",
+                              border: "border-amber-500/20",
+                            }
+                          : {
+                              bg: "bg-blue-500/10",
+                              text: "text-blue-500",
+                              border: "border-blue-500/20",
+                            };
+
+                    return (
+                      <button
+                        key={training.id}
+                        onClick={() => navigate(`/registration/${training.id}`)}
+                        className={`
                             w-full
                             text-left
                             p-4
@@ -1135,61 +837,63 @@ const fetchDashboardData = useCallback(
                             border-slate-200
                             bg-slate-50
                           `}
-                        >
-
-                          <div
-                            className="
+                      >
+                        <div
+                          className="
                               flex
                               items-center
                               justify-between
                               gap-4
                             "
-                          >
-
-                            <div className="min-w-0">
-
-                              <p
-                                className="
+                        >
+                          <div className="min-w-0">
+                            <p
+                              className="
                                   font-bold
                                   text-sm
                                   sm:text-base
                                   break-words
                                   leading-6
                                 "
+                            >
+                              {training.title}
+                            </p>
+
+                            <div className="mt-3">
+                              <span
+                                className={`
+                                  inline-flex
+                                  items-center
+                                  rounded-full
+                                  border
+                                  px-3
+                                  py-1.5
+                                  text-[11px]
+                                  uppercase
+                                  font-black
+                                  tracking-wide
+                                  ${urgencyStyle.bg}
+                                  ${urgencyStyle.text}
+                                  ${urgencyStyle.border}
+                                `}
                               >
-                                {training.title}
+                                {training.urgency}
+                              </span>
+
+                              <p
+                                className="
+                                  text-xs
+                                  mt-2
+                                  opacity-60
+                                "
+                              >
+                                {training.date}
                               </p>
-
-                              <div className="mt-3">
-
-                                <span
-                                  className={`
-                                    inline-flex
-                                    items-center
-                                    rounded-full
-                                    border
-                                    px-3
-                                    py-1.5
-                                    text-[11px]
-                                    uppercase
-                                    font-black
-                                    tracking-wide
-                                    ${severityColor.bg}
-                                    ${severityColor.text}
-                                    ${severityColor.border}
-                                  `}
-                                >
-                                  {
-                                    training.severity
-                                  }
-                                </span>
-
-                              </div>
-
                             </div>
+                          </div>
 
-                            <div
-                              className="
+                          <div
+                            className="
                                 flex
                                 items-center
                                 gap-2
@@ -1198,27 +902,16 @@ const fetchDashboardData = useCallback(
                                 font-black
                                 text-sm
                               "
-                            >
-
-                              Start
-
-                              <ArrowUpRight
-                                size={18}
-                              />
-
-                            </div>
-
+                          >
+                            Start
+                            <ArrowUpRight size={18} />
                           </div>
-
-                        </button>
-
-                      );
-
-                    }
-                  )}
+                        </div>
+                      </button>
+                    );
+                  })}
 
                   {!liveUrgentTrainings.length && (
-
                     <div
                       className="
                         text-center
@@ -1226,7 +919,6 @@ const fetchDashboardData = useCallback(
                         opacity-70
                       "
                     >
-
                       <CheckCircle2
                         size={36}
                         className="
@@ -1246,28 +938,15 @@ const fetchDashboardData = useCallback(
                         All Trainings Completed
                       </h3>
 
-                      <p className="text-sm">
-                        No urgent training pending.
-                      </p>
-
+                      <p className="text-sm">No urgent training pending.</p>
                     </div>
-
                   )}
-
                 </div>
-
               </Card>
-
             </section>
-
           </>
-
         )}
-
       </main>
-
     </div>
-
   );
-
 }

@@ -1,12 +1,6 @@
-import React, {
-  useMemo,
-} from 'react';
+import React, { useMemo } from "react";
 
-import {
-  NavLink,
-  useLocation,
-  useNavigate,
-} from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 import {
   LayoutDashboard,
@@ -15,38 +9,29 @@ import {
   LogOut,
   Sparkles,
   UserCircle2,
-} from 'lucide-react';
+  GraduationCap,
+  ClipboardCheck,
+  CheckCircle2,
+} from "lucide-react";
 
-import useSession from '../../hooks/useSession';
+import useSession from "../../hooks/useSession";
 
-import {
-  ROLE_LABELS,
-  isExecutive,
-} from '../../config/constants/roles';
+import { ROLE_LABELS, isExecutive } from "../../config/constants/roles";
 
-import {
-  Button,
-  Badge,
-} from '../ui';
+import { Button, Badge } from "../ui";
 
 export default function Sidebar() {
-
   /**
    * =========================================================
    * HOOKS
    * =========================================================
    */
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const location =
-    useLocation();
+  const location = useLocation();
 
-  const {
-    getSession,
-    clearSession,
-  } = useSession();
+  const { getSession, clearSession } = useSession();
 
   /**
    * =========================================================
@@ -60,15 +45,11 @@ export default function Sidebar() {
    * =========================================================
    */
 
-  const currentUser =
-  useMemo(() => {
+  const currentUser = useMemo(() => {
     return getSession();
   }, [getSession]);
 
-  const executiveMode =
-    isExecutive(
-      currentUser?.role
-    );
+  const executiveMode = isExecutive(currentUser?.role);
 
   /**
    * =========================================================
@@ -77,7 +58,6 @@ export default function Sidebar() {
    */
 
   const styles = {
-
     sidebar: `
       bg-white
       border-slate-200
@@ -94,7 +74,6 @@ export default function Sidebar() {
       shadow-lg
       shadow-amber-500/20
     `,
-
   };
 
   /**
@@ -103,59 +82,49 @@ export default function Sidebar() {
    * =========================================================
    */
 
-  const operatorNavigation =
-    useMemo(() => [
-
+  const operatorNavigation = useMemo(
+    () => [
       {
-        label:
-          'Dashboard',
-
-        icon:
-          LayoutDashboard,
-
-        path:
-          '/dashboard',
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        path: "/dashboard",
       },
 
       {
-        label:
-          'WIS Training Registry',
-
-        icon:
-          BookOpen,
-
-        path:
-          '/training-og',
-      },
-
-    ], []);
-
-  const executiveNavigation =
-    useMemo(() => [
-
-      {
-        label:
-          'Dashboard',
-
-        icon:
-          LayoutDashboard,
-
-        path:
-          '/dashboard',
+        label: "My Trainings",
+        icon: GraduationCap,
+        path: "/my-trainings",
       },
 
       {
-        label:
-          'Review Submission',
+        label: "My Inspection Forms",
+        icon: ClipboardCheck,
+        path: "/inspection-forms",
+      },
+    ],
+    [],
+  );
 
-        icon:
-          ShieldCheck,
+  const executiveNavigation = useMemo(
+    () => [
+      {
+        label: "Dashboard",
 
-        path:
-          '/review-form',
+        icon: LayoutDashboard,
+
+        path: "/dashboard",
       },
 
-    ], []);
+      {
+        label: "Review Submission",
+
+        icon: ShieldCheck,
+
+        path: "/review-form",
+      },
+    ],
+    [],
+  );
 
   /**
    * =========================================================
@@ -163,15 +132,9 @@ export default function Sidebar() {
    * =========================================================
    */
 
-  const isActive =
-    (path) => {
-
-      return (
-        location.pathname ===
-        path
-      );
-
-    };
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
 
   /**
    * =========================================================
@@ -179,14 +142,11 @@ export default function Sidebar() {
    * =========================================================
    */
 
-  const handleLogout =
-    () => {
+  const handleLogout = () => {
+    clearSession();
 
-      clearSession();
-
-      navigate('/');
-
-    };
+    navigate("/");
+  };
 
   /**
    * =========================================================
@@ -194,82 +154,70 @@ export default function Sidebar() {
    * =========================================================
    */
 
-  const SidebarContent =
-    () => (
-
-      <div
-        className={`
+  const SidebarContent = () => (
+    <div
+      className={`
           flex
           flex-col
           h-full
           border-r
           ${styles.sidebar}
         `}
-      >
+    >
+      {/* ================================================= */}
+      {/* HEADER */}
+      {/* ================================================= */}
 
-        {/* ================================================= */}
-        {/* HEADER */}
-        {/* ================================================= */}
-
-        <div
-          className="
+      <div
+        className="
             px-5
             py-5
             border-b
             border-slate-200
           "
-        >
-
-          <div
-            className="
+      >
+        <div
+          className="
               flex
               items-start
               justify-between
               gap-3
             "
-          >
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles size={15} className="text-amber-500" />
 
-            <div className="min-w-0">
-
-              <div className="flex items-center gap-2 mb-3">
-
-                <Sparkles
-                  size={15}
-                  className="text-amber-500"
-                />
-
-                <p
-                  className="
+              <p
+                className="
                     text-xs
                     uppercase
                     tracking-[0.15em]
                     text-amber-500
                     font-black
                   "
-                >
-                  QC App
-                </p>
+              >
+                QC App
+              </p>
+            </div>
 
-              </div>
-
-              <h1
-                className="
+            <h1
+              className="
                   text-xl
                   font-black
                   leading-tight
                 "
-              >
-                NSSB
-              </h1>
-
-            </div>
+            >
+              NSSB
+            </h1>
           </div>
         </div>
+      </div>
 
-          {/* USER */}
+      {/* USER */}
 
-        <div
-          className="
+      <div
+        className="
             hidden
             lg:block
             px-5
@@ -277,12 +225,10 @@ export default function Sidebar() {
             border-b
             border-slate-200
           "
-        >
-
-          <div className="flex items-start gap-4">
-
-            <div
-              className="
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className="
                 w-12
                 h-12
                 rounded-2xl
@@ -293,81 +239,57 @@ export default function Sidebar() {
                 justify-center
                 shrink-0
               "
-            >
+          >
+            <UserCircle2 size={26} />
+          </div>
 
-              <UserCircle2 size={26} />
-
-            </div>
-
-            <div className="min-w-0 flex-1">
-
-              <h2
-                className="
+          <div className="min-w-0 flex-1">
+            <h2
+              className="
                   font-black
                   text-base
                   break-words
                 "
-              >
-                {
-                  currentUser?.name ||
-                  'User'
-                }
-              </h2>
+            >
+              {currentUser?.name || "User"}
+            </h2>
 
-              <p
-                className="
+            <p
+              className="
                   text-sm
                   opacity-60
                   mt-1
                 "
-              >
-                {
-                  currentUser?.employeeId
-                }
-              </p>
+            >
+              {currentUser?.employeeId}
+            </p>
 
-              <div className="mt-3">
-
-                <Badge
-                  variant="warning"
-                  size="md"
-                >
-
-                  {
-                    ROLE_LABELS[
-                      currentUser?.role
-                    ]
-                  }
-
-                </Badge>
-
-              </div>
-
+            <div className="mt-3">
+              <Badge variant="warning" size="md">
+                {ROLE_LABELS[currentUser?.role]}
+              </Badge>
             </div>
-
           </div>
-
         </div>
+      </div>
 
-        {/* ================================================= */}
-        {/* NAVIGATION */}
-        {/* ================================================= */}
+      {/* ================================================= */}
+      {/* NAVIGATION */}
+      {/* ================================================= */}
 
-        <div
-  className="
+      <div
+        className="
     flex-1
     overflow-y-auto
     px-4
     py-5
     space-y-6
   "
->
-
-  {/* MAIN */}
-  <div className="space-y-2">
-
-    <p
-      className="
+      >
+        {/* MAIN */}
+        <div className="space-y-2">
+          <p
+            className="
         text-xs
         uppercase
         tracking-[0.15em]
@@ -376,24 +298,19 @@ export default function Sidebar() {
         px-3
         mb-3
       "
-    >
-      Main Navigation
-    </p>
+          >
+            Main Navigation
+          </p>
 
-    {(executiveMode
-      ? executiveNavigation
-      : operatorNavigation
-    ).map((item) => {
+          {(executiveMode ? executiveNavigation : operatorNavigation).map(
+            (item) => {
+              const Icon = item.icon;
 
-      const Icon =
-        item.icon;
-
-      return (
-
-        <NavLink
-          key={item.path}
-          to={item.path}
-          className={`
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={`
             flex
             items-center
             gap-4
@@ -403,60 +320,47 @@ export default function Sidebar() {
             font-bold
             transition-all
             duration-200
-            ${
-              isActive(item.path)
-                ? styles.activeItem
-                : styles.navItem
-            }
+            ${isActive(item.path) ? styles.activeItem : styles.navItem}
           `}
-        >
+                >
+                  <Icon size={20} />
 
-          <Icon size={20} />
-
-          <span
-            className="
+                  <span
+                    className="
               text-[15px]
               font-semibold
             "
-          >
-            {item.label}
-          </span>
+                  >
+                    {item.label}
+                  </span>
+                </NavLink>
+              );
+            },
+          )}
+        </div>
+      </div>
 
-        </NavLink>
-
-      );
-
-    })}
-
-  </div>
-
-</div>
-
-{/* FOOTER */}
-<div
-  className="
+      {/* FOOTER */}
+      <div
+        className="
     p-4
     border-t
     border-slate-200
     pb-safe
   "
->
-
-  <Button
-    variant="danger"
-    size="lg"
-    fullWidth
-    icon={LogOut}
-    onClick={handleLogout}
-  >
-
-    Logout
-
-  </Button>
-
-</div>
-</div>
-    );
+      >
+        <Button
+          variant="danger"
+          size="lg"
+          fullWidth
+          icon={LogOut}
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
+      </div>
+    </div>
+  );
 
   /**
    * =========================================================
@@ -465,27 +369,21 @@ export default function Sidebar() {
    */
 
   return (
-
     <>
       {/* ================================================= */}
       {/* DESKTOP SIDEBAR */}
       {/* ================================================= */}
 
-        <aside
-          className="
+      <aside
+        className="
             flex
             flex-col
             w-[280px]
             h-screen
           "
-        >
-
+      >
         <SidebarContent />
-
       </aside>
-
     </>
-
   );
-
 }

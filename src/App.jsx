@@ -11,18 +11,15 @@ import {
 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import WisTrainingOG from './pages/WisTrainingOG';
 import WisFormRegistration from './pages/WisFormRegistration';
 import TrainingHistory from './pages/TrainingHistory';
-
+import MyTrainings from './pages/MyTrainings';
+import TrainingAttendance from './pages/TrainingAttendance';
+import MyInspectionForms from './pages/MyInspectionForms';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-
 import AppLayout from './layouts/AppLayout';
-
 import useSession from './hooks/useSession';
-
 import ReviewForm from './pages/ReviewForm';
-
 import ReviewSubmission from './pages/ReviewSubmission';
 
 export default function App() {
@@ -156,6 +153,49 @@ export default function App() {
           />
 
           <Route
+            path="/my-trainings"
+            element={
+              <ProtectedRoute>
+
+                <AppLayout>
+
+                  <MyTrainings
+                    user={user}
+                  />
+
+                </AppLayout>
+
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/training-attendance"
+            element={
+              <ProtectedRoute>
+
+                <AppLayout>
+
+                  <TrainingAttendance />
+
+                </AppLayout>
+
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/inspection-forms"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <MyInspectionForms />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/review/:submissionId"
             element={
               <ProtectedRoute>
@@ -175,22 +215,6 @@ export default function App() {
                 <AppLayout>
 
                   <TrainingHistory />
-
-                </AppLayout>
-
-              </ProtectedRoute>
-            }
-          />
-
-          {/* WIS TRAINING OG */}
-          <Route
-            path="/training-og"
-            element={
-              <ProtectedRoute>
-
-                <AppLayout>
-
-                  <WisTrainingOG />
 
                 </AppLayout>
 
