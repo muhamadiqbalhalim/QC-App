@@ -1,5 +1,6 @@
-import React, {
-  useEffect,
+import {
+  lazy,
+  Suspense,
   useState,
 } from 'react';
 
@@ -9,18 +10,46 @@ import {
   Navigate,
 } from 'react-router-dom';
 
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import WisFormRegistration from './pages/WisFormRegistration';
-import TrainingHistory from './pages/TrainingHistory';
-import MyTrainings from './pages/MyTrainings';
-import TrainingAttendance from './pages/TrainingAttendance';
-import MyInspectionForms from './pages/MyInspectionForms';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AppLayout from './layouts/AppLayout';
 import useSession from './hooks/useSession';
-import ReviewForm from './pages/ReviewForm';
-import ReviewSubmission from './pages/ReviewSubmission';
+
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const WisFormRegistration = lazy(() => import('./pages/WisFormRegistration'));
+const TrainingHistory = lazy(() => import('./pages/TrainingHistory'));
+const MyTrainings = lazy(() => import('./pages/MyTrainings'));
+const TrainingAttendance = lazy(() => import('./pages/TrainingAttendance'));
+const MyInspectionForms = lazy(() => import('./pages/MyInspectionForms'));
+const ReviewForm = lazy(() => import('./pages/ReviewForm'));
+const ReviewSubmission = lazy(() => import('./pages/ReviewSubmission'));
+
+function RouteFallback() {
+  return (
+    <div
+      className="
+        min-h-screen
+        flex
+        items-center
+        justify-center
+        bg-[#F8FAFC]
+        text-slate-900
+      "
+    >
+      <div
+        className="
+          w-12
+          h-12
+          border-4
+          border-amber-500/20
+          border-t-amber-500
+          rounded-full
+          animate-spin
+        "
+      />
+    </div>
+  );
+}
 
 export default function App() {
 
@@ -46,25 +75,6 @@ export default function App() {
       getSession()
     );
 
-  /**
-   * =========================================================
-   * SYNC SESSION
-   * =========================================================
-   */
-
-  useEffect(() => {
-
-    const session =
-      getSession();
-
-    if (session) {
-
-      setUser(session);
-
-    }
-
-  }, [getSession]);
-
   return (
     <div
       className="
@@ -84,6 +94,7 @@ export default function App() {
 
       {!isAuthenticated() ? (
 
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
 
           {/* LOGIN */}
@@ -110,6 +121,7 @@ export default function App() {
           />
 
         </Routes>
+        </Suspense>
 
       ) : (
 
@@ -117,6 +129,7 @@ export default function App() {
             AUTHENTICATED ROUTES
         =================================================== */
 
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
 
           {/* DASHBOARD */}
@@ -261,6 +274,7 @@ export default function App() {
           />
 
         </Routes>
+        </Suspense>
 
       )}
 

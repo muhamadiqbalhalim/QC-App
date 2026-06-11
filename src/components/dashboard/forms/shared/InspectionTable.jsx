@@ -1,4 +1,4 @@
-import React, {
+import {
   memo,
   useCallback,
   useMemo,
@@ -730,30 +730,23 @@ function InspectionTable({
     setPreviewImage,
   ] = useState(null);
 
-  if (!section) {
-
-    return (
-      <div className="p-10 text-center text-sm font-bold text-red-500">
-        Invalid inspection section configuration.
-      </div>
-    );
-  }
-
   const {
     id: sectionId,
     rows = [],
     inputs = [],
-  } = section;
+  } = section || {};
 
-  const safeRows =
+  const safeRows = useMemo(() => (
     Array.isArray(rows)
       ? rows
-      : [];
+      : []
+  ), [rows]);
 
-  const safeInputs =
+  const safeInputs = useMemo(() => (
     Array.isArray(inputs)
       ? inputs
-      : [];
+      : []
+  ), [inputs]);
 
   const renderedRows = useMemo(() => {
 
@@ -784,6 +777,15 @@ function InspectionTable({
     handleInputChange,
     readOnly,
   ]);
+
+  if (!section) {
+
+    return (
+      <div className="p-10 text-center text-sm font-bold text-red-500">
+        Invalid inspection section configuration.
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

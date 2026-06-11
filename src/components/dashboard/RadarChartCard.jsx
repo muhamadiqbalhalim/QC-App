@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import { memo, useMemo, useEffect, useState } from "react";
 
 import {
   Radar,
@@ -10,6 +10,16 @@ import {
 } from "recharts";
 
 function RadarChartCard({ skills = {} }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const chartData = useMemo(() => {
     const defaultSkills = [
       "QUALITY",
@@ -20,16 +30,16 @@ function RadarChartCard({ skills = {} }) {
     ];
 
     if (Object.keys(skills).length > 0) {
-      return Object.entries(skills).map(([key, value]) => ({
-        subject: String(key).replaceAll("_", " ").toUpperCase(),
-
-        value: Number(value) || 0,
-      }));
+      return Object.entries(skills)
+        .slice(0, 8)
+        .map(([key, value]) => ({
+          subject: String(key).replaceAll("_", " ").toUpperCase(),
+          value: Number(value) || 0,
+        }));
     }
 
     return defaultSkills.map((skill) => ({
       subject: skill,
-
       value: 0,
     }));
   }, [skills]);
@@ -171,48 +181,44 @@ function RadarChartCard({ skills = {} }) {
       {/* CHART */}
       <div
         className="
-          w-full
-          h-[380px]
-          min-w-0
-          flex
-          items-center
-          justify-center
-        "
+            w-full
+            h-[320px]
+            min-w-0
+          "
       >
-        <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-            <PolarGrid stroke={colors.grid} />
+        {mounted && (
+          <ResponsiveContainer width="99%" height="100%">
+            <RadarChart data={chartData} cx="50%" cy="50%" outerRadius="75%">
+              <PolarGrid stroke={colors.grid} />
 
-            <PolarAngleAxis
-              dataKey="subject"
-              tick={{
-                fill: colors.text,
-                fontSize: 11,
-                fontWeight: 700,
-                fontFamily: "Inter, sans-serif",
-              }}
-            />
+              <PolarAngleAxis
+                dataKey="subject"
+                tick={{
+                  fill: colors.text,
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              />
 
-            <PolarRadiusAxis
-              angle={30}
-              domain={[0, 100]}
-              tick={{
-                fill: colors.text,
-                fontSize: 10,
-              }}
-              stroke={colors.grid}
-            />
+              <PolarRadiusAxis
+                domain={[0, 100]}
+                stroke={colors.grid}
+                tick={{
+                  fill: colors.text,
+                  fontSize: 10,
+                }}
+              />
 
-            <Radar
-              name="Competency"
-              dataKey="value"
-              stroke={colors.radarStroke}
-              fill={colors.radarFill}
-              fillOpacity={0.25}
-              strokeWidth={2.5}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
+              <Radar
+                dataKey="value"
+                stroke={colors.radarStroke}
+                fill={colors.radarFill}
+                fillOpacity={0.18}
+                strokeWidth={2}
+              />
+            </RadarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

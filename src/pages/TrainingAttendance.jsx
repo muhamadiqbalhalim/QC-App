@@ -1,17 +1,8 @@
-import React, {
+import {
   useEffect,
   useMemo,
   useState,
 } from 'react';
-
-import {
-  Calendar,
-  Clock3,
-  MapPin,
-  CheckCircle2,
-  Camera,
-  Upload,
-} from 'lucide-react';
 
 import {
   collection,
@@ -68,6 +59,35 @@ export default function TrainingAttendance() {
     const [submitting, setSubmitting] =
     useState(false);
 
+  const proofPreviewUrl =
+    useMemo(
+      () =>
+        proofImage
+          ? URL.createObjectURL(
+              proofImage
+            )
+          : '',
+      [
+        proofImage,
+      ]
+    );
+
+  useEffect(() => {
+
+    return () => {
+
+      if (proofPreviewUrl) {
+
+        URL.revokeObjectURL(
+          proofPreviewUrl
+        );
+
+      }
+
+    };
+
+  }, [proofPreviewUrl]);
+
   useEffect(() => {
 
     const loadData =
@@ -108,6 +128,27 @@ export default function TrainingAttendance() {
                     currentUser.employeeId
                   )
                 )
+              )
+            );
+            console.log(
+              "Current Employee:",
+              currentUser.employeeId
+            );
+
+            console.log(
+              "Registration Snapshot:",
+              registrationSnapshot
+            );
+
+            console.log(
+              "Attendance Snapshot:",
+              attendanceSnapshot
+            );
+
+            console.log(
+              "Registrations:",
+              registrationSnapshot.docs.map(
+                doc => doc.data()
               )
             );
 
@@ -191,15 +232,6 @@ export default function TrainingAttendance() {
         return;
 
         }
-        {
-
-        alert(
-            'Attendance already submitted.'
-        );
-
-        return;
-
-        }
         try {
 
         if (!selectedTraining) {
@@ -222,12 +254,39 @@ export default function TrainingAttendance() {
 
         }
 
+        if (
+          proofImage.size >
+          5 * 1024 * 1024
+        ) {
+
+          alert(
+            'Attendance photo must be 5MB or smaller.'
+          );
+
+          return;
+
+        }
+
+        if (
+          !proofImage.type.startsWith(
+            'image/'
+          )
+        ) {
+
+          alert(
+            'Please upload a valid image file.'
+          );
+
+          return;
+
+        }
+
         setSubmitting(true);
 
         const imageRef =
             ref(
             storage,
-            `training_proofs/${Date.now()}_${proofImage.name}`
+            `training_proofs/${currentUser.employeeId}_${selectedTraining.trainingId}_${Date.now()}`
             );
 
         await uploadBytes(
@@ -504,24 +563,6 @@ export default function TrainingAttendance() {
             border
             "
         >
-            {selectedTraining && (
-
-            <input
-                value={
-                selectedTraining.trainingDate || ''
-                }
-                disabled
-                className="
-                w-full
-                mt-4
-                p-4
-                rounded-2xl
-                bg-slate-100
-                "
-            />
-
-            )}
-
             <option value="">
             Select Training Session
             </option>
@@ -541,6 +582,24 @@ export default function TrainingAttendance() {
 
         </select>
 
+        {selectedTraining && (
+
+            <input
+                value={
+                selectedTraining.trainingDate || ''
+                }
+                disabled
+                className="
+                w-full
+                mt-4
+                p-4
+                rounded-2xl
+                bg-slate-100
+                "
+            />
+
+            )}
+
         <div className="mt-5">
 
             <input
@@ -558,7 +617,7 @@ export default function TrainingAttendance() {
         {proofImage && (
 
             <img
-            src={URL.createObjectURL(proofImage)}
+            src={proofPreviewUrl}
             alt="Attendance Proof"
             className="
                 mt-4

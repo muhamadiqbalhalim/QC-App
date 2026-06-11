@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
@@ -77,6 +77,44 @@ export default function WisFormRegistration() {
    */
 
   const [workflowData, setWorkflowData] = useState(null);
+
+  /**
+   * =========================================================
+   * FORM DATA
+   * =========================================================
+   */
+
+  const [formData, setFormData] = useState({
+    meta: {
+      name: currentUser?.name || "N/A",
+
+      employeeId: currentUser?.employeeId || "N/A",
+
+      department: currentUser?.department || "N/A",
+
+      role: currentUser?.role || "OPERATOR",
+
+      date: new Date().toISOString().split("T")[0],
+    },
+
+    inspection: {},
+
+    approval: {
+      execId: "",
+    },
+  });
+
+  /**
+   * =========================================================
+   * STATES
+   * =========================================================
+   */
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const [validExecutive, setValidExecutive] = useState(false);
 
   /**
    * =========================================================
@@ -162,44 +200,6 @@ export default function WisFormRegistration() {
 
   /**
    * =========================================================
-   * FORM DATA
-   * =========================================================
-   */
-
-  const [formData, setFormData] = useState({
-    meta: {
-      name: currentUser?.name || "N/A",
-
-      OperatorNo: currentUser?.employeeId || "N/A",
-
-      department: currentUser?.department || "N/A",
-
-      role: currentUser?.role || "OPERATOR",
-
-      date: new Date().toISOString().split("T")[0],
-    },
-
-    inspection: {},
-
-    approval: {
-      execId: "",
-    },
-  });
-
-  /**
-   * =========================================================
-   * STATES
-   * =========================================================
-   */
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const [validExecutive, setValidExecutive] = useState(false);
-
-  /**
-   * =========================================================
    * INSPECTION SUMMARY
    * =========================================================
    */
@@ -259,9 +259,14 @@ export default function WisFormRegistration() {
 
       ready: isInspectionComplete,
     };
-  }, [formData.inspection]);
+  }, [
+    formData.inspection,
+    isInspectionComplete,
+  ]);
 
-  const isReadOnly = workflowData?.lifecycleStatus === TRAINING_STATUS.APPROVED;
+  const isReadOnly =
+    workflowData?.lifecycleStatus === TRAINING_STATUS.APPROVED ||
+    workflowData?.lifecycleStatus === TRAINING_STATUS.SUBMITTED;
 
   /**
    * =========================================================
@@ -287,26 +292,6 @@ export default function WisFormRegistration() {
         },
       },
     }));
-  };
-
-  /**
-   * =========================================================
-   * APPROVAL CHANGE
-   * =========================================================
-   */
-
-  const handleApprovalChange = (event) => {
-    const value = event.target.value.trim().toUpperCase();
-
-    setFormData((prev) => ({
-      ...prev,
-
-      approval: {
-        execId: value,
-      },
-    }));
-
-    setValidExecutive(isExecutiveUser(value));
   };
 
   /**
@@ -387,6 +372,8 @@ export default function WisFormRegistration() {
 
           answers: formData.inspection,
 
+          formData,
+
           meta: formData.meta,
 
           inspectionSummary,
@@ -421,7 +408,7 @@ export default function WisFormRegistration() {
        */
 
       setTimeout(() => {
-        navigate("/training-og");
+        navigate("/inspection-forms");
       }, 1200);
     } catch (error) {
       console.error("Submission Error:", error);
@@ -582,20 +569,25 @@ export default function WisFormRegistration() {
         "
       >
         <button
-          onClick={() => navigate("/training-og")}
+          onClick={() => navigate("/inspection-forms")}
           className="
-            flex
+            inline-flex
             items-center
             gap-2
+            px-4
+            py-2
+            rounded-xl
+            border
+            border-slate-200
+            bg-white
             text-sm
-            font-bold
-            opacity-60
-            hover:opacity-100
+            font-semibold
+            hover:bg-slate-50
             transition-all
           "
         >
           <ArrowLeft size={16} />
-          Back to Trainings
+          Back to My Inspection Forms
         </button>
 
         <div
@@ -605,26 +597,7 @@ export default function WisFormRegistration() {
             items-center
             gap-3
           "
-        >
-          <div
-            className="
-              flex
-              items-center
-              justify-center
-              px-4
-              py-3
-              rounded-2xl
-              border
-              border-amber-500/20
-              bg-amber-500/10
-              text-amber-400
-              text-sm
-              font-bold
-            "
-          >
-            {trainingConfig.severity}
-          </div>
-        </div>
+        ></div>
       </div>
 
       {/* ===================================================== */}
@@ -633,8 +606,8 @@ export default function WisFormRegistration() {
 
       <div
         className="
-          p-5
-          sm:p-6
+          p-4
+          sm:p-5
           rounded-3xl
           border
           bg-white
@@ -645,66 +618,72 @@ export default function WisFormRegistration() {
 
         <h1
           className="
-            text-2xl
-            sm:text-3xl
-            lg:text-4xl
+            text-xl
+            sm:text-2xl
+            lg:text-3xl
             font-black
             leading-tight
             break-words
           "
         >
-          {trainingConfig.title}
+          {trainingConfig.code} • {trainingConfig.title}
         </h1>
-
-        <p className="text-sm opacity-60 mt-3 max-w-2xl leading-7">
-          {trainingConfig.description}
-        </p>
 
         {/* ================================================= */}
         {/* STATUS */}
         {/* ================================================= */}
-
         <div className="flex flex-wrap items-center gap-3 mt-6">
-          <div className="px-4 py-2 rounded-2xl border border-slate-300  text-xs font-bold opacity-70">
-            {trainingConfig.code}
-          </div>
-
-          <div className="px-4 py-2 rounded-2xl border border-blue-500/20 bg-blue-500/10 text-blue-400 text-xs font-bold">
-            Total: {inspectionSummary.total}
-          </div>
-
-          <div className="px-4 py-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-bold">
-            PASS: {inspectionSummary.passed}
-          </div>
-
-          <div className="px-4 py-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-red-400 text-xs font-bold">
-            FAIL: {inspectionSummary.failed}
-          </div>
-
           <div
             className={`
               px-4
               py-2
               rounded-2xl
-              border
               text-xs
               font-bold
               ${
-                inspectionSummary.ready
-                  ? `
-                    border-emerald-500/20
-                    bg-emerald-500/10
-                    text-emerald-400
-                  `
-                  : `
-                    border-amber-500/20
-                    bg-amber-500/10
-                    text-amber-400
-                  `
+                workflowData?.lifecycleStatus === TRAINING_STATUS.APPROVED
+                  ? "bg-emerald-100 text-emerald-700"
+                  : workflowData?.lifecycleStatus === TRAINING_STATUS.REJECTED
+                    ? "bg-red-100 text-red-700"
+                    : workflowData?.lifecycleStatus ===
+                        TRAINING_STATUS.SUBMITTED
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-slate-100 text-slate-700"
               }
             `}
           >
-            {inspectionSummary.ready ? "READY FOR REVIEW" : "REQUIRES REVIEW"}
+            {workflowData?.lifecycleStatus === TRAINING_STATUS.APPROVED
+              ? "✅ APPROVED"
+              : workflowData?.lifecycleStatus === TRAINING_STATUS.REJECTED
+                ? "❌ REJECTED"
+                : workflowData?.lifecycleStatus === TRAINING_STATUS.SUBMITTED
+                  ? "⏳ SUBMITTED"
+                  : "📝 DRAFT"}
+          </div>
+        </div>
+        <div className="border-t border-slate-200 mt-5 pt-5">
+          <div className="mt-5 grid grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className=" p-3 rounded-xl border border-slate-200 bg-slate-50">
+              <p className="text-[11px] uppercase opacity-50">Operator</p>
+              <p className="font-bold">{formData.meta.name}</p>
+            </div>
+
+            <div className=" p-3 rounded-xl border border-slate-200 bg-slate-50">
+              <p className="text-[11px] uppercase opacity-50">Employee ID</p>
+              <p className="font-bold">{formData.meta.employeeId}</p>
+            </div>
+
+            <div className=" p-3 rounded-xl border border-slate-200 bg-slate-50">
+              <p className="text-[11px] uppercase opacity-50">Department</p>
+              <p className="font-bold">{formData.meta.department}</p>
+            </div>
+
+            <div className=" p-3 rounded-xl border border-slate-200 bg-slate-50">
+              <p className="text-[11px] uppercase opacity-50">
+                Inspection Date
+              </p>
+              <p className="font-bold">{formData.meta.date}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -770,11 +749,76 @@ export default function WisFormRegistration() {
         readOnly={isReadOnly}
       />
 
+      {workflowData?.executiveAssessment && (
+        <div className="p-6 rounded-3xl border bg-white border-slate-200">
+          <h3 className="font-black text-lg mb-4">
+            Executive Assessment & Evaluation
+          </h3>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-[11px] uppercase opacity-50">Pre-Test</p>
+              <p className="font-bold">
+                {workflowData.executiveAssessment.preTest}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[11px] uppercase opacity-50">Post-Test</p>
+              <p className="font-bold">
+                {workflowData.executiveAssessment.postTest}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <p className="text-xs opacity-60 mb-2">Remarks</p>
+            <p>{workflowData.executiveAssessment.remark}</p>
+          </div>
+
+          <div className="mt-5 pt-4 border-t">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+              <p className="text-sm mt-2">
+                Reviewed By:
+                {" "}
+                {workflowData.executiveAssessment?.reviewedByName}
+              </p>
+
+              <p className="text-sm">
+                Date:
+                {" "}
+                {workflowData.executiveAssessment?.reviewedAt
+                  ? new Date(
+                      workflowData.executiveAssessment.reviewedAt
+                    ).toLocaleString()
+                  : "-"
+                }
+              </p>
+              </div>
+
+              <div>
+                <p className="text-xs opacity-60">Reviewed Date</p>
+
+                <p className="font-bold">
+                  {workflowData.executiveAssessment?.reviewedAt
+                    ? new Date(workflowData.executiveAssessment?.reviewedAt).toLocaleString()
+                    : "-"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ===================================================== */}
       {/* SUBMIT */}
       {/* ===================================================== */}
 
-      {workflowData?.lifecycleStatus !== TRAINING_STATUS.APPROVED && (
+      {!(
+        workflowData?.lifecycleStatus === TRAINING_STATUS.APPROVED ||
+        workflowData?.lifecycleStatus === TRAINING_STATUS.SUBMITTED
+      ) && (
         <div
           className="
           sticky
@@ -798,13 +842,24 @@ export default function WisFormRegistration() {
         >
           <div className="space-y-3 w-full">
             <div>
-              <p className="text-sm font-bold mb-2">Executive Approval ID</p>
+              <p className="text-sm font-bold mb-2">
+                Select Executive Reviewer
+              </p>
 
-              <input
-                type="text"
+              <select
                 value={formData.approval.execId}
-                onChange={handleApprovalChange}
-                placeholder="Enter executive ID"
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    approval: {
+                      execId: value,
+                    },
+                  }));
+
+                  setValidExecutive(isExecutiveUser(value));
+                }}
                 className="
                 w-full
                 sm:min-w-[260px]
@@ -813,12 +868,15 @@ export default function WisFormRegistration() {
                 rounded-2xl
                 border
                 border-slate-300
-                
-                bg-transparent
-                outline-none
-                focus:border-amber-500/30
+                bg-white
+                appearance-none
+                cursor-pointer
               "
-              />
+              >
+                <option value="">Select Executive</option>
+
+                <option value="2500">2500 - MUHAMAD IQBAL</option>
+              </select>
 
               <p className="text-xs opacity-60 mt-2">
                 Executive responsible for approval

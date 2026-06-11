@@ -1,17 +1,15 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 import {
   LayoutDashboard,
   ShieldCheck,
-  BookOpen,
   LogOut,
   Sparkles,
   UserCircle2,
   GraduationCap,
   ClipboardCheck,
-  CheckCircle2,
 } from "lucide-react";
 
 import useSession from "../../hooks/useSession";
@@ -154,7 +152,7 @@ export default function Sidebar() {
    * =========================================================
    */
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div
       className={`
           flex
@@ -382,7 +380,7 @@ export default function Sidebar() {
             h-screen
           "
       >
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
     </>
   );

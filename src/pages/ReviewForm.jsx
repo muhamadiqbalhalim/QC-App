@@ -1,63 +1,51 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useEffect, useMemo, useState } from "react";
 
-import {
-  useNavigate,
-} from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 import {
   collection,
   getDocs,
   query,
   where,
-  doc,
-  updateDoc,
-} from 'firebase/firestore';
+} from "firebase/firestore";
 
 import {
   FileText,
-  CheckCircle2,
-  XCircle,
   Clock3,
   Eye,
   Search,
   ShieldCheck,
   AlertTriangle,
   Filter,
-} from 'lucide-react';
+  Download,
+} from "lucide-react";
 
-import {
-  db,
-} from '../config/firebase';
+import { exportAuditPdf } from "../utils/pdf/exportAuditPdf";
 
-import useSession from '../hooks/useSession';
+import { FORM_REGISTRY } from '../config/FormRegistry';
+
+import { db } from "../config/firebase";
+
+import useSession from "../hooks/useSession";
 
 import {
   TRAINING_STATUS,
-} from '../config/constants/status';
+  getTrainingStatusLabel,
+  getTrainingStatusVariant,
+} from "../config/constants/status";
 
-import {
-  Card,
-  Button,
-  Badge,
-} from '../components/ui';
+import { Card, Button, Badge } from "../components/ui";
 
 export default function ReviewForm() {
-
   /**
    * =========================================================
    * HOOKS
    * =========================================================
    */
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const { getSession } =
-    useSession();
+  const { getSession } = useSession();
 
   /**
    * =========================================================
@@ -65,8 +53,7 @@ export default function ReviewForm() {
    * =========================================================
    */
 
-  const currentUser =
-    getSession();
+  const currentUser = getSession();
 
   /**
    * =========================================================
@@ -74,26 +61,13 @@ export default function ReviewForm() {
    * =========================================================
    */
 
-  const [
-    submissions,
-    setSubmissions,
-  ] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] =
-    useState('');
+  const [search, setSearch] = useState("");
 
-  const [
-    statusFilter,
-    setStatusFilter,
-  ] = useState('ALL');
-
-  const [
-    actionLoading,
-    setActionLoading,
-  ] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   /**
    * =========================================================
@@ -102,84 +76,44 @@ export default function ReviewForm() {
    */
 
   useEffect(() => {
+    if (!currentUser?.employeeId) {
+      setLoading(false);
 
-  if (
-    !currentUser?.employeeId
-  ) {
+      return;
+    }
 
-    setLoading(false);
+    const fetchSubmissions = async () => {
+      try {
+        setLoading(true);
 
-    return;
+        const submissionsQuery = query(
+          collection(db, "user_progress"),
+          where("approvedBy", "==", currentUser.employeeId),
+        );
 
-  }
+        const snapshot = await getDocs(submissionsQuery);
 
-    const fetchSubmissions =
-      async () => {
+        const data = snapshot.docs.map((document) => ({
+          id: document.id,
 
-        try {
+          ...document.data(),
+        }));
 
-          setLoading(true);
+        data.sort(
+          (a, b) =>
+            new Date(b.updatedAt || b.completedAt) -
+            new Date(a.updatedAt || a.completedAt),
+        );
 
-          const submissionsQuery =
-            query(
-              collection(
-                db,
-                'user_progress'
-              ),
-              where(
-                'approvedBy',
-                '==',
-                currentUser.employeeId
-              )
-            );
-
-          const snapshot =
-            await getDocs(
-              submissionsQuery
-            );
-
-          const data =
-            snapshot.docs.map(
-              (document) => ({
-
-                id: document.id,
-
-                ...document.data(),
-
-              })
-            );
-
-          data.sort(
-            (a, b) =>
-              new Date(
-                b.updatedAt ||
-                b.completedAt
-              ) -
-              new Date(
-                a.updatedAt ||
-                a.completedAt
-              )
-          );
-
-          setSubmissions(data);
-
-        } catch (error) {
-
-          console.error(
-            'Review fetch failed:',
-            error
-          );
-
-        } finally {
-
-          setLoading(false);
-
-        }
-
-      };
+        setSubmissions(data);
+      } catch (error) {
+        console.error("Review fetch failed:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchSubmissions();
-
   }, [currentUser?.employeeId]);
 
   /**
@@ -188,332 +122,101 @@ export default function ReviewForm() {
    * =========================================================
    */
 
-  const filteredSubmissions =
-    useMemo(() => {
+  const filteredSubmissions = useMemo(() => {
+    let filtered = submissions;
 
-      let filtered =
-        submissions;
+    if (search) {
+      const keyword = search.toLowerCase();
 
-      if (search) {
+      filtered = filtered.filter(
+        (submission) =>
+          submission.employeeName?.toLowerCase()?.includes(keyword) ||
+          submission.trainingTitle?.toLowerCase()?.includes(keyword) ||
+          submission.employeeId?.toLowerCase()?.includes(keyword),
+      );
+    }
 
-        const keyword =
-          search.toLowerCase();
+    if (statusFilter !== "ALL") {
+      filtered = filtered.filter(
+        (submission) => submission.lifecycleStatus === statusFilter,
+      );
+    }
 
-        filtered =
-          filtered.filter(
-            (submission) => (
+    return filtered;
+  }, [submissions, search, statusFilter]);
 
-              submission.employeeName
-                ?.toLowerCase()
-                ?.includes(keyword) ||
+  const reviewStats = useMemo(() => {
+    return {
+      pending: submissions.filter(
+        (item) => item.lifecycleStatus === TRAINING_STATUS.SUBMITTED,
+      ).length,
 
-              submission.trainingTitle
-                ?.toLowerCase()
-                ?.includes(keyword) ||
+      approved: submissions.filter(
+        (item) => item.lifecycleStatus === TRAINING_STATUS.APPROVED,
+      ).length,
 
-              submission.employeeId
-                ?.toLowerCase()
-                ?.includes(keyword)
+      rejected: submissions.filter(
+        (item) => item.lifecycleStatus === TRAINING_STATUS.REJECTED,
+      ).length,
 
-            )
-          );
-
-      }
-
-      if (
-        statusFilter !==
-        'ALL'
-      ) {
-
-        filtered =
-          filtered.filter(
-            (submission) =>
-              submission.lifecycleStatus ===
-              statusFilter
-          );
-
-      }
-
-      return filtered;
-
-    }, [
-      submissions,
-      search,
-      statusFilter,
-    ]);
-
-    const reviewStats =
-      useMemo(() => {
-
-        return {
-
-          pending:
-            submissions.filter(
-              (item) =>
-                item.lifecycleStatus ===
-                TRAINING_STATUS.SUBMITTED
-            ).length,
-
-          approved:
-            submissions.filter(
-              (item) =>
-                item.lifecycleStatus ===
-                TRAINING_STATUS.APPROVED
-            ).length,
-
-          rejected:
-            submissions.filter(
-              (item) =>
-                item.lifecycleStatus ===
-                TRAINING_STATUS.REJECTED
-            ).length,
-
-          attention:
-            submissions.filter(
-              (item) =>
-                item.lifecycleStatus ===
-                TRAINING_STATUS.SUBMITTED &&
-                (item.inspectionSummary?.failed || 0) > 0
-            ).length,
-
-        };
-
-      }, [submissions]);
-  /**
-   * =========================================================
-   * APPROVE
-   * =========================================================
-   */
-
-  const handleApprove =
-    async (submissionId) => {
-
-      const confirmed =
-        window.confirm(
-          'Approve this submission?'
-        );
-
-      if (!confirmed) {
-        return;
-      }
-
-      try {
-
-        setActionLoading(
-          submissionId
-        );
-
-        const progressRef =
-          doc(
-            db,
-            'user_progress',
-            submissionId
-          );
-
-        await updateDoc(
-          progressRef,
-          {
-
-            lifecycleStatus:
-              TRAINING_STATUS.APPROVED,
-
-            approvedAt:
-              new Date().toISOString(),
-
-            approvedByExecutive:
-              currentUser.employeeId,
-
-            updatedAt:
-              new Date().toISOString(),
-
-          }
-        );
-
-        setSubmissions(
-          (previous) =>
-            previous.map(
-              (item) => {
-
-                if (
-                  item.id !==
-                  submissionId
-                ) {
-
-                  return item;
-
-                }
-
-                return {
-
-                  ...item,
-
-                  lifecycleStatus:
-                    TRAINING_STATUS.APPROVED,
-
-                };
-
-              }
-            )
-        );
-
-      } catch (error) {
-
-        console.error(
-          'Approve failed:',
-          error
-        );
-
-      } finally {
-
-        setActionLoading(null);
-
-      }
-
+      attention: submissions.filter(
+        (item) =>
+          item.lifecycleStatus === TRAINING_STATUS.SUBMITTED &&
+          (item.inspectionSummary?.failed || 0) > 0,
+      ).length,
     };
+  }, [submissions]);
+  const handleDownloadPDF = async (submission) => {
 
-  /**
-   * =========================================================
-   * REJECT
-   * =========================================================
-   */
+    try {
 
-  const handleReject =
-    async (submissionId) => {
+      const trainingConfig =
+        FORM_REGISTRY[
+          submission.trainingId
+            ?.toLowerCase()
+        ];
 
-      const confirmed =
-        window.confirm(
-          'Reject this submission?'
-        );
+      await exportAuditPdf({
 
-      if (!confirmed) {
-        return;
-      }
+        currentUser: {
+          name:
+            submission.employeeName,
 
-      try {
+          employeeId:
+            submission.employeeId,
 
-        setActionLoading(
-          submissionId
-        );
+          department:
+            submission.department,
+        },
 
-        const progressRef =
-          doc(
-            db,
-            'user_progress',
-            submissionId
-          );
+        trainingConfig,
 
-        await updateDoc(
-          progressRef,
-          {
+        workflowData:
+          submission,
 
-            lifecycleStatus:
-              TRAINING_STATUS.REJECTED,
+        formData:
+          submission.formData || {},
 
-            rejectedAt:
-              new Date().toISOString(),
+        totalMark:
+          submission.totalMark || 0,
 
-            approvedByExecutive:
-              currentUser.employeeId,
+      });
 
-            updatedAt:
-              new Date().toISOString(),
+    } catch (error) {
 
-          }
-        );
+      console.error(
+        "PDF download failed:",
+        error
+      );
 
-        setSubmissions(
-          (previous) =>
-            previous.map(
-              (item) => {
+    }
 
-                if (
-                  item.id !==
-                  submissionId
-                ) {
-
-                  return item;
-
-                }
-
-                return {
-
-                  ...item,
-
-                  lifecycleStatus:
-                    TRAINING_STATUS.REJECTED,
-
-                };
-
-              }
-            )
-        );
-
-      } catch (error) {
-
-        console.error(
-          'Reject failed:',
-          error
-        );
-
-      } finally {
-
-        setActionLoading(null);
-
-      }
-
-    };
-
+  };
   /**
    * =========================================================
    * STATUS
    * =========================================================
    */
-
-  const getStatusVariant =
-    (status) => {
-
-      switch (status) {
-
-        case
-          TRAINING_STATUS.APPROVED:
-
-          return 'success';
-
-        case
-          TRAINING_STATUS.REJECTED:
-
-          return 'danger';
-
-        default:
-
-          return 'warning';
-
-      }
-
-    };
-
-  const getStatusLabel =
-    (status) => {
-
-      switch (status) {
-
-        case
-          TRAINING_STATUS.APPROVED:
-
-          return 'Approved';
-
-        case
-          TRAINING_STATUS.REJECTED:
-
-          return 'Rejected';
-
-        default:
-
-          return 'Pending';
-
-      }
-
-    };
 
   /**
    * =========================================================
@@ -522,11 +225,9 @@ export default function ReviewForm() {
    */
 
   if (loading) {
-
     return (
-
-        <div
-          className="
+      <div
+        className="
             min-h-screen
             flex
             items-center
@@ -534,10 +235,8 @@ export default function ReviewForm() {
             bg-[#F8FAFC]
             text-slate-900
           "
-        >
-
+      >
         <div className="text-center">
-
           <div
             className="
               w-14
@@ -552,22 +251,15 @@ export default function ReviewForm() {
             "
           />
 
-          <p className="text-sm opacity-60">
-            Loading submissions...
-          </p>
-
+          <p className="text-sm opacity-60">Loading submissions...</p>
         </div>
-
       </div>
-
     );
-
   }
 
   return (
-
-      <div
-        className="
+    <div
+      className="
           min-h-screen
           px-4
           py-5
@@ -579,8 +271,7 @@ export default function ReviewForm() {
           bg-[#F8FAFC]
           text-slate-900
         "
-      >
-
+    >
       {/* ================================================= */}
       {/* HEADER */}
       {/* ================================================= */}
@@ -595,16 +286,10 @@ export default function ReviewForm() {
           xl:justify-between
         "
       >
-
         {/* LEFT */}
         <div>
-
           <div className="flex items-center gap-2 mb-3">
-
-            <ShieldCheck
-              size={16}
-              className="text-amber-500"
-            />
+            <ShieldCheck size={16} className="text-amber-500" />
 
             <p
               className="
@@ -615,7 +300,6 @@ export default function ReviewForm() {
             >
               Executive Review Center
             </p>
-
           </div>
 
           <h1
@@ -629,7 +313,6 @@ export default function ReviewForm() {
           >
             Review Submission
           </h1>
-
         </div>
 
         {/* RIGHT */}
@@ -643,10 +326,8 @@ export default function ReviewForm() {
             xl:w-auto
           "
         >
-
           {/* SEARCH */}
           <Card
-            
             padding="sm"
             className="
               flex
@@ -656,7 +337,6 @@ export default function ReviewForm() {
               sm:min-w-[320px]
             "
           >
-
             <Search
               className="
                 w-5
@@ -668,11 +348,7 @@ export default function ReviewForm() {
             <input
               type="text"
               value={search}
-              onChange={(event) =>
-                setSearch(
-                  event.target.value
-                )
-              }
+              onChange={(event) => setSearch(event.target.value)}
               placeholder="Search employee or training..."
               className="
                 bg-transparent
@@ -681,12 +357,10 @@ export default function ReviewForm() {
                 text-sm
               "
             />
-
           </Card>
 
           {/* FILTER */}
           <Card
-            
             padding="sm"
             className="
               flex
@@ -694,19 +368,11 @@ export default function ReviewForm() {
               gap-3
             "
           >
-
-            <Filter
-              size={18}
-              className="opacity-60"
-            />
+            <Filter size={18} className="opacity-60" />
 
             <select
               value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(
-                  event.target.value
-                )
-              }
+              onChange={(event) => setStatusFilter(event.target.value)}
               className="
                 bg-transparent
                 outline-none
@@ -714,41 +380,16 @@ export default function ReviewForm() {
                 font-semibold
               "
             >
+              <option value="ALL">All</option>
 
-              <option value="ALL">
-                All
-              </option>
+              <option value={TRAINING_STATUS.SUBMITTED}>Pending</option>
 
-              <option
-                value={
-                  TRAINING_STATUS.SUBMITTED
-                }
-              >
-                Pending
-              </option>
+              <option value={TRAINING_STATUS.APPROVED}>Approved</option>
 
-              <option
-                value={
-                  TRAINING_STATUS.APPROVED
-                }
-              >
-                Approved
-              </option>
-
-              <option
-                value={
-                  TRAINING_STATUS.REJECTED
-                }
-              >
-                Rejected
-              </option>
-
+              <option value={TRAINING_STATUS.REJECTED}>Rejected</option>
             </select>
-
           </Card>
-
         </div>
-
       </div>
 
       {/* ================================================= */}
@@ -756,66 +397,47 @@ export default function ReviewForm() {
       {/* ================================================= */}
 
       <div
-      className="
+        className="
         grid
         grid-cols-2
         lg:grid-cols-4
         gap-4
       "
-    >
+      >
+        <Card>
+          <p className="text-xs opacity-60">Pending</p>
 
-      <Card>
-        <p className="text-xs opacity-60">
-          Pending
-        </p>
+          <h2 className="text-3xl font-black mt-2">{reviewStats.pending}</h2>
+        </Card>
 
-        <h2 className="text-3xl font-black mt-2">
-          {reviewStats.pending}
-        </h2>
-      </Card>
+        <Card>
+          <p className="text-xs opacity-60">Approved</p>
 
-      <Card>
-        <p className="text-xs opacity-60">
-          Approved
-        </p>
+          <h2 className="text-3xl font-black mt-2">{reviewStats.approved}</h2>
+        </Card>
 
-        <h2 className="text-3xl font-black mt-2">
-          {reviewStats.approved}
-        </h2>
-      </Card>
+        <Card>
+          <p className="text-xs opacity-60">Rejected</p>
 
-      <Card>
-        <p className="text-xs opacity-60">
-          Rejected
-        </p>
+          <h2 className="text-3xl font-black mt-2">{reviewStats.rejected}</h2>
+        </Card>
 
-        <h2 className="text-3xl font-black mt-2">
-          {reviewStats.rejected}
-        </h2>
-      </Card>
+        <Card>
+          <p className="text-xs opacity-60">Attention</p>
 
-      <Card>
-        <p className="text-xs opacity-60">
-          Attention
-        </p>
-
-        <h2 className="text-3xl font-black mt-2 text-red-500">
-          {reviewStats.attention}
-        </h2>
-      </Card>
-
-    </div>
+          <h2 className="text-3xl font-black mt-2 text-red-500">
+            {reviewStats.attention}
+          </h2>
+        </Card>
+      </div>
 
       {!filteredSubmissions.length && (
-
         <Card
-          
           className="
             text-center
             py-12
           "
         >
-
           <ShieldCheck
             size={42}
             className="
@@ -838,9 +460,7 @@ export default function ReviewForm() {
           <p className="text-sm opacity-60">
             No operator submissions match the current filter.
           </p>
-
         </Card>
-
       )}
 
       {/* ================================================= */}
@@ -848,37 +468,25 @@ export default function ReviewForm() {
       {/* ================================================= */}
 
       <div className="space-y-5">
+        {filteredSubmissions.map((submission) => {
+          const failCount = submission?.inspectionSummary?.failed || 0;
 
-        {filteredSubmissions.map(
-          (submission) => {
+          const passCount = submission?.inspectionSummary?.passed || 0;
 
-            const failCount =
-              submission
-                ?.inspectionSummary
-                ?.failed || 0;
-
-            const passCount =
-              submission
-                ?.inspectionSummary
-                ?.passed || 0;
-
-            return (
-
-                  <Card
-                    key={submission.id}
-                    hover
-                    className={
-                      failCount > 0 &&
-                      submission.lifecycleStatus ===
-                        TRAINING_STATUS.SUBMITTED
-                        ? 'border-red-300 bg-red-50'
-                        : ''
-                    }
-                  >
-
-                {/* TOP */}
-                <div
-                  className="
+          return (
+            <Card
+              key={submission.id}
+              hover
+              className={
+                failCount > 0 &&
+                submission.lifecycleStatus === TRAINING_STATUS.SUBMITTED
+                  ? "border-red-300 bg-red-50"
+                  : ""
+              }
+            >
+              {/* TOP */}
+              <div
+                className="
                     flex
                     flex-col
                     gap-6
@@ -886,55 +494,42 @@ export default function ReviewForm() {
                     xl:items-start
                     xl:justify-between
                   "
-                >
-
-                  {/* LEFT */}
-                  <div className="space-y-5 flex-1">
-
-                    {/* EMPLOYEE */}
-                    <div>
-
-                      <p
-                        className="
+              >
+                {/* LEFT */}
+                <div className="space-y-5 flex-1">
+                  {/* EMPLOYEE */}
+                  <div>
+                    <p
+                      className="
                           text-xs
                           font-semibold
                           opacity-50
                           mb-2
                         "
-                      >
-                        Employee
-                      </p>
+                    >
+                      Employee
+                    </p>
 
-                      <h2
-                        className="
+                    <h2
+                      className="
                           text-2xl
                           sm:text-3xl
                           font-black
                           break-words
                         "
-                      >
-                        {
-                          submission.employeeName
-                        }
-                      </h2>
+                    >
+                      {submission.employeeName}
+                    </h2>
 
-                      <p className="opacity-60 mt-2">
-                        ID:
-                        {' '}
-                        {
-                          submission.employeeId
-                        }
-                      </p>
+                    <p className="opacity-60 mt-2">
+                      ID: {submission.employeeId}
+                    </p>
 
-                      <p className="opacity-60">
-                        Department:
-                        {' '}
-                        {submission.department || 'N/A'}
-                      </p>
-
-                    </div>
-                    <div>
-
+                    <p className="opacity-60">
+                      Department: {submission.department || "N/A"}
+                    </p>
+                  </div>
+                  <div>
                     <p
                       className="
                         text-xs
@@ -947,221 +542,113 @@ export default function ReviewForm() {
                     </p>
 
                     <p className="font-bold">
-                      {submission.approvedByName || 'Executive'}
+                      {submission.approvedByName || "Executive"}
                     </p>
 
-                    <p className="opacity-60">
-                      ID: {submission.approvedBy}
-                    </p>
-
+                    <p className="opacity-60">ID: {submission.approvedBy}</p>
                   </div>
-                    {/* TRAINING */}
-                    <div>
-
-                      <p
-                        className="
+                  {/* TRAINING */}
+                  <div>
+                    <p
+                      className="
                           text-xs
                           font-semibold
                           opacity-50
                           mb-2
                         "
-                      >
-                        Training
-                      </p>
+                    >
+                      Training
+                    </p>
 
-                      <p
-                        className="
+                    <p
+                      className="
                           text-lg
                           font-bold
                           leading-7
                         "
-                      >
-                        {
-                          submission.trainingTitle
-                        }
-                      </p>
+                    >
+                      {submission.trainingTitle}
+                    </p>
+                  </div>
 
-                    </div>
-
-                    {/* SUMMARY */}
-                    <div
-                      className="
+                  {/* SUMMARY */}
+                  <div
+                    className="
                         flex
                         flex-wrap
                         items-center
                         gap-3
                       "
+                  >
+                    <Badge variant="success" size="lg">
+                      PASS: {passCount}
+                    </Badge>
+
+                    <Badge
+                      variant={failCount > 0 ? "danger" : "default"}
+                      size="lg"
                     >
+                      FAIL: {failCount}
+                    </Badge>
 
-                      <Badge
-                        variant="success"
-                        size="lg"
-                      >
-
-                        PASS:
-                        {' '}
-                        {passCount}
-
+                    {failCount > 0 && (
+                      <Badge variant="danger" size="lg">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle size={14} />
+                          Attention Required
+                        </div>
                       </Badge>
-
-                      <Badge
-                        variant={
-                          failCount > 0
-                            ? 'danger'
-                            : 'default'
-                        }
-                        size="lg"
-                      >
-
-                        FAIL:
-                        {' '}
-                        {failCount}
-
-                      </Badge>
-
-                      {failCount > 0 && (
-
-                        <Badge
-                          variant="danger"
-                          size="lg"
-                        >
-
-                          <div className="flex items-center gap-2">
-
-                            <AlertTriangle
-                              size={14}
-                            />
-
-                            Attention Required
-
-                          </div>
-
-                        </Badge>
-
-                      )}
-
-                    </div>
-
+                    )}
                   </div>
+                </div>
 
-                  {/* RIGHT */}
-                  <div
-                    className="
+                {/* RIGHT */}
+                <div
+                  className="
                       flex
                       flex-col
                       gap-3
                       w-full
                       xl:w-auto
                     "
-                  >
-
-                    {/* STATUS */}
-                    <Badge
-                      variant={
-                        getStatusVariant(
-                          submission.lifecycleStatus
-                        )
-                      }
-                      size="lg"
-                      className="
+                >
+                  {/* STATUS */}
+                  <Badge
+                    variant={getTrainingStatusVariant(submission.lifecycleStatus)}
+                    size="lg"
+                    className="
                         w-full
                         xl:w-auto
                         min-h-[52px]
                       "
-                    >
+                  >
+                    {getTrainingStatusLabel(submission.lifecycleStatus)}
+                  </Badge>
 
-                      {
-                        getStatusLabel(
-                          submission.lifecycleStatus
-                        )
-                      }
+                  {/* REVIEW */}
+                  <Button
+                    variant={failCount > 0 ? "danger" : "info"}
+                    size="lg"
+                    icon={Eye}
+                    onClick={() => navigate(`/review/${submission.id}`)}
+                  >
+                    {failCount > 0 ? "Review Critical" : "Review Submission"}
+                  </Button>
 
-                    </Badge>
-
-                    {/* REVIEW */}
-                    <Button
-                      variant={
-                        failCount > 0
-                          ? 'danger'
-                          : 'info'
-                      }
-                      size="lg"
-                      icon={Eye}
-                      onClick={() =>
-                        navigate(
-                          `/review/${submission.id}`
-                        )
-                      }
-                    >
-
-                      {failCount > 0
-                        ? 'Review Critical'
-                        : 'Review Submission'}
-
-                    </Button>
-
-                    {/* ACTIONS */}
-                    {submission.lifecycleStatus ===
-                      TRAINING_STATUS.SUBMITTED && (
-
-                      <div
-                        className="
-                          grid
-                          grid-cols-1
-                          sm:grid-cols-2
-                          gap-3
-                        "
-                      >
-
-                        <Button
-                          variant="success"
-                          size="md"
-                          icon={CheckCircle2}
-                          loading={
-                            actionLoading ===
-                            submission.id
-                          }
-                          onClick={() =>
-                            handleApprove(
-                              submission.id
-                            )
-                          }
-                        >
-
-                          Approve
-
-                        </Button>
-
-                        <Button
-                          variant="danger"
-                          size="md"
-                          icon={XCircle}
-                          loading={
-                            actionLoading ===
-                            submission.id
-                          }
-                          onClick={() =>
-                            handleReject(
-                              submission.id
-                            )
-                          }
-                        >
-
-                          Reject
-
-                        </Button>
-
-                      </div>
-
-                    )}
-
-                  </div>
+                  <Button
+                    variant="secondary"
+                    icon={Download}
+                    onClick={() => handleDownloadPDF(submission)}
+                  >
+                    Download Report
+                  </Button>
 
                 </div>
+              </div>
 
-                {/* FOOTER */}
-                <div
-                  className="
+              {/* FOOTER */}
+              <div
+                className="
                     mt-6
                     pt-5
                     border-t
@@ -1173,47 +660,28 @@ export default function ReviewForm() {
                     text-sm
                     opacity-60
                   "
-                >
-
-                  <div className="flex items-center gap-2">
-
-                    <Clock3
-                      size={15}
-                    />
-
-                    Submitted:
-                    {' '}
-                    {new Date(
-                      submission.completedAt
-                    ).toLocaleString()}
-
-                  </div>
-
-                  <div className="flex items-center gap-2">
-
-                    <FileText
-                      size={15}
-                    />
-
-                    {
-                      submission.trainingId
-                    }
-
-                  </div>
-
+              >
+                <div className="flex items-center gap-2">
+                  <Clock3 size={15} />
+                  Submitted: {
+                    submission.completedAt
+                      ? new Date(
+                          submission.completedAt
+                        ).toLocaleString()
+                      : 'N/A'
+                  }
                 </div>
 
-              </Card>
+                <div className="flex items-center gap-2">
+                  <FileText size={15} />
 
-            );
-
-          }
-        )}
-
+                  {submission.trainingId}
+                </div>
+              </div>
+            </Card>
+          );
+        })}
       </div>
-
     </div>
-
   );
-
 }

@@ -1,16 +1,14 @@
-import React, { useMemo, useEffect, useState, useCallback } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 
 import { useNavigate } from "react-router-dom";
 
 import {
   User,
-  Award,
   Folder,
   AlertTriangle,
   ArrowUpRight,
   CheckCircle2,
   ClipboardCheck,
-  Activity,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -21,19 +19,13 @@ import {
   query,
   where,
   getDocs,
-  doc,
-  updateDoc,
 } from "firebase/firestore";
 
 import { db } from "../config/firebase";
 
 import useSession from "../hooks/useSession";
 
-import { FORM_REGISTRY } from "../config/FormRegistry";
-
 import { ROLE_LABELS, isExecutive } from "../config/constants/roles";
-
-import { SEVERITY } from "../config/constants/severity";
 
 import { TRAINING_STATUS } from "../config/constants/status";
 
@@ -43,7 +35,7 @@ import RadarChartCard from "../components/dashboard/RadarChartCard";
 
 import ExecutiveApprovalPanel from "../components/dashboard/executive/ExecutiveApprovalPanel";
 
-import { Card, Button, Badge } from "../components/ui";
+import { Card, Badge } from "../components/ui";
 
 export default function Dashboard({ user: propUser }) {
   /**
@@ -53,8 +45,8 @@ export default function Dashboard({ user: propUser }) {
    */
 
   const [progressData, setProgressData] = useState([]);
-
   const [companyTrainings, setCompanyTrainings] = useState([]);
+  const [attendanceData, setAttendanceData] = useState([]);
 
   const [executivePendingApprovals, setExecutivePendingApprovals] = useState(
     [],
@@ -77,10 +69,11 @@ export default function Dashboard({ user: propUser }) {
    * =========================================================
    */
 
-  const currentUser =
-    propUser && Object.keys(propUser).length > 0
+  const currentUser = useMemo(() => {
+    return propUser && Object.keys(propUser).length > 0
       ? propUser
       : getSession() || {};
+  }, [getSession, propUser]);
 
   /**
    * =========================================================
@@ -105,64 +98,113 @@ export default function Dashboard({ user: propUser }) {
     try {
       setLoading(true);
 
-      /**
-       * USER PROGRESS
-       */
-
       const userProgressQuery = query(
         collection(db, "user_progress"),
         where("employeeId", "==", currentUser.employeeId),
       );
 
-      const userProgressSnapshot = await getDocs(userProgressQuery);
+const departmentSnapshot = await getDocs(
+  query(
+    collection(db, "trainings"),
+    where(
+      "allowedDepartments",
+      "array-contains",
+      currentUser.department
+    )
+  )
+);
 
-      const userProgress = userProgressSnapshot.docs.map((document) => ({
-        id: document.id,
+const allSnapshot = await getDocs(
+  query(
+    collection(db, "trainings"),
+    where(
+      "allowedDepartments",
+      "array-contains",
+      "ALL"
+    )
+  )
+);
 
-        ...document.data(),
-      }));
+const privateSnapshot = await getDocs(
+  query(
+    collection(db, "trainings"),
+    where(
+      "invitedUsers",
+      "array-contains",
+      currentUser.id
+    )
+  )
+);
 
-      setProgressData(userProgress);
+const uniqueTrainings = new Map();
 
-      /**
-       * COMPANY TRAININGS
-       */
+[
+  ...departmentSnapshot.docs,
+  ...allSnapshot.docs,
+  ...privateSnapshot.docs,
+].forEach((doc) => {
+  uniqueTrainings.set(doc.id, {
+    id: doc.id,
+    ...doc.data(),
+  });
+});
 
-      const trainingQuery = query(
-        collection(db, "trainings"),
-        where("allowedDepartments", "array-contains", currentUser.department),
+const trainingList = Array.from(
+  uniqueTrainings.values()
+);
+
+const attendanceSnapshot = await getDocs(
+  query(
+    collection(db, "training_attendance"),
+    where(
+      "staffId",
+      "==",
+      String(currentUser.employeeId)
+    )
+  )
+);
+
+const attendanceList =
+  attendanceSnapshot.docs.map(
+    (doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })
+  );
+
+setAttendanceData(attendanceList);
+setCompanyTrainings(trainingList);
+
+if (executiveMode) {
+
+  const submissionSnapshot = await getDocs(
+    query(
+      collection(db, "user_progress"),
+      where(
+        "approvedBy",
+        "==",
+        String(currentUser.employeeId)
+      )
+    )
+  );
+
+  const approvals =
+    submissionSnapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .filter(
+        (item) =>
+          item.lifecycleStatus ===
+          TRAINING_STATUS.SUBMITTED
       );
 
-      const trainingSnapshot = await getDocs(trainingQuery);
+  setExecutivePendingApprovals(
+    approvals
+  );
+}
 
-      const trainingList = trainingSnapshot.docs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
-
-      setCompanyTrainings(trainingList);
-
-      /**
-       * EXECUTIVE APPROVALS
-       */
-
-      if (executiveMode) {
-        const approvalQuery = query(
-          collection(db, "user_progress"),
-          where("approvedBy", "==", currentUser.employeeId),
-          where("lifecycleStatus", "==", TRAINING_STATUS.SUBMITTED),
-        );
-
-        const approvalSnapshot = await getDocs(approvalQuery);
-
-        const approvals = approvalSnapshot.docs.map((document) => ({
-          id: document.id,
-
-          ...document.data(),
-        }));
-
-        setExecutivePendingApprovals(approvals);
-      }
     } catch (error) {
       console.error("Dashboard fetch failed:", error);
     } finally {
@@ -186,31 +228,15 @@ export default function Dashboard({ user: propUser }) {
    * =========================================================
    */
 
-  const completedTrainings = useMemo(() => {
-    return progressData.filter(
-      (item) => item.lifecycleStatus === TRAINING_STATUS.APPROVED,
-    );
-  }, [progressData]);
+    const completedTrainings = useMemo(() => {
+      return attendanceData;
+    }, [attendanceData]);
 
-  /**
-   * =========================================================
-   * TOTAL TRAININGS
-   * =========================================================
-   */
-
-  const totalTrainings = Object.keys(FORM_REGISTRY).length;
-
-  /**
-   * =========================================================
-   * COMPLETION %
-   * =========================================================
-   */
-
-  const completionPercentage =
-    totalTrainings > 0
-      ? Math.round((completedTrainings.length / totalTrainings) * 100)
-      : 0;
-
+    const attendedTrainingIds = new Set(
+    attendanceData.map(
+      (item) => item.trainingId
+    )
+  );
   /**
    * =========================================================
    * RADAR DATA
@@ -229,78 +255,84 @@ export default function Dashboard({ user: propUser }) {
 
   /**
    * =========================================================
-   * AVG SCORE
-   * =========================================================
-   */
-
-  const averageSkillScore = useMemo(() => {
-    if (!completedTrainings.length) {
-      return 0;
-    }
-
-    const total = completedTrainings.reduce(
-      (accumulator, item) => accumulator + Number(item.finalScore || 0),
-      0,
-    );
-
-    return Math.round(total / completedTrainings.length);
-  }, [completedTrainings]);
-
-  /**
-   * =========================================================
    * URGENT TRAININGS
    * =========================================================
    */
 
-  const liveUrgentTrainings = useMemo(() => {
-    const today = new Date();
+const liveUrgentTrainings = useMemo(() => {
+  const today = new Date();
 
-    return [...companyTrainings]
+  return companyTrainings
+    .map((training) => {
+      const trainingDate = new Date(training.dateString);
 
-      .map((training) => {
-        const trainingDate = new Date(training.dateString);
+      const diffDays = Math.ceil(
+        (trainingDate - today) / (1000 * 60 * 60 * 24)
+      );
 
-        const diffDays = Math.ceil(
-          (trainingDate - today) / (1000 * 60 * 60 * 24),
-        );
+      let urgency = "UPCOMING";
 
-        let urgency = "UPCOMING";
+      if (diffDays < 0) {
+        urgency = "OVERDUE";
+      } else if (diffDays <= 3) {
+        urgency = "URGENT";
+      }
 
-        if (diffDays < 0) {
-          urgency = "OVERDUE";
-        } else if (diffDays <= 3) {
-          urgency = "URGENT";
-        }
+      return {
+        id: training.id,
+        title: training.name,
+        date: training.dateString,
+        location: training.where,
+        urgency,
+        diffDays,
+      };
+    })
 
-        return {
-          id: training.id,
+    // HIDE OVERDUE
+    .filter(
+      (training) =>
+        !attendedTrainingIds.has(training.id) &&
+        training.diffDays >= 0 &&
+        training.diffDays <= 7
+    )
 
-          title: training.name,
+    .sort((a, b) => a.diffDays - b.diffDays)
 
-          date: training.dateString,
+    .slice(0, 5);
+}, [companyTrainings]);
 
-          location: training.where,
 
-          urgency,
+const trainingSummary = useMemo(() => {
+  const today = new Date();
 
-          diffDays,
-        };
-      })
+  return companyTrainings
+    .filter(
+      (training) =>
+        !attendedTrainingIds.has(training.id)
+    )
+    .map((training) => {
+      const trainingDate = new Date(
+        training.dateString
+      );
 
-      .sort((a, b) => {
-        if (a.urgency === "OVERDUE" && b.urgency !== "OVERDUE") {
-          return -1;
-        }
+      const diffDays = Math.ceil(
+        (trainingDate - today) /
+          (1000 * 60 * 60 * 24)
+      );
 
-        if (b.urgency === "OVERDUE" && a.urgency !== "OVERDUE") {
-          return 1;
-        }
+      return {
+        ...training,
+        diffDays,
+      };
+    });
+}, [companyTrainings, attendanceData]);
 
-        return a.diffDays - b.diffDays;
-      })
 
-      .slice(0, 5);
-  }, [companyTrainings]);
+    const pendingTrainings = trainingSummary.filter(
+      (item) =>
+        item.diffDays >= 0 &&
+        item.diffDays <= 7
+    );
 
   /**
    * =========================================================
@@ -308,51 +340,24 @@ export default function Dashboard({ user: propUser }) {
    * =========================================================
    */
 
-  const handleApprove = async (submission) => {
-    try {
-      const progressRef = doc(db, "user_progress", submission.id);
+    const openReview = (submission) => {
+      navigate(`/review/${submission.id}`);
+    };
 
-      await updateDoc(progressRef, {
-        lifecycleStatus: TRAINING_STATUS.APPROVED,
+    const overdueCount = trainingSummary.filter(
+      (item) => item.diffDays < 0
+    ).length;
 
-        approvedAt: new Date().toISOString(),
-
-        approvedByExecutive: currentUser.employeeId,
-
-        updatedAt: new Date().toISOString(),
-      });
-
-      fetchDashboardData();
-    } catch (error) {
-      console.error("Approval failed:", error);
-    }
-  };
-
-  /**
-   * =========================================================
-   * REJECT
-   * =========================================================
-   */
-
-  const handleReject = async (submission) => {
-    try {
-      const progressRef = doc(db, "user_progress", submission.id);
-
-      await updateDoc(progressRef, {
-        lifecycleStatus: TRAINING_STATUS.REJECTED,
-
-        rejectedAt: new Date().toISOString(),
-
-        approvedByExecutive: currentUser.employeeId,
-
-        updatedAt: new Date().toISOString(),
-      });
-
-      fetchDashboardData();
-    } catch (error) {
-      console.error("Rejection failed:", error);
-    }
-  };
+    const upcomingCount = trainingSummary.filter(
+      (item) =>
+        item.diffDays >= 0 &&
+        item.diffDays <= 7
+    ).length;
+    /**
+     * =========================================================
+     * REJECT
+     * =========================================================
+     */
 
   /**
    * =========================================================
@@ -360,48 +365,35 @@ export default function Dashboard({ user: propUser }) {
    * =========================================================
    */
 
-  const kpiCards = [
-    {
-      icon: ClipboardCheck,
+    const kpiCards = [
+      {
+        icon: ClipboardCheck,
+        label: "Completed",
+        value: completedTrainings.length,
+        variant: "default",
+      },
 
-      label: "Completed",
+      {
+        icon: AlertTriangle,
+        label: "Overdue",
+        value: overdueCount,
+        variant: "danger",
+      },
 
-      value: completedTrainings.length,
+      {
+        icon: Folder,
+        label: "Upcoming",
+        value: upcomingCount,
+        variant: "primary",
+      },
 
-      variant: "default",
-    },
-
-    {
-      icon: Activity,
-
-      label: "Completion",
-
-      value: `${completionPercentage}%`,
-
-      variant: "primary",
-    },
-
-    {
-      icon: Award,
-
-      label: "Avg Score",
-
-      value: `${averageSkillScore}%`,
-
-      variant: "success",
-    },
-
-    {
-      icon: ShieldAlert,
-
-      label: "Pending",
-
-      value: liveUrgentTrainings.filter((item) => item.urgency !== "UPCOMING")
-        .length,
-
-      variant: "danger",
-    },
-  ];
+      {
+        icon: ShieldAlert,
+        label: "Pending",
+        value: pendingTrainings.length,
+        variant: "warning",
+      }
+    ];
 
   /**
    * =========================================================
@@ -506,7 +498,7 @@ export default function Dashboard({ user: propUser }) {
                 break-words
               "
             >
-              Welcome,{" "}
+              Welcome Back,{" "}
               <span className="text-amber-500">
                 {currentUser.name || "Operator"}
               </span>
@@ -571,7 +563,7 @@ export default function Dashboard({ user: propUser }) {
           />
 
           <MetaCards
-            icon={Award}
+            icon={ClipboardCheck}
             label="EMPLOYEE ID"
             value={currentUser.employeeId}
           />
@@ -658,8 +650,7 @@ export default function Dashboard({ user: propUser }) {
             {/* APPROVAL PANEL */}
             <ExecutiveApprovalPanel
               submissions={executivePendingApprovals}
-              onApprove={handleApprove}
-              onReject={handleReject}
+              onApprove={openReview}
             />
           </>
         )}
@@ -721,7 +712,8 @@ export default function Dashboard({ user: propUser }) {
                         <h2
                           className="
                             mt-5
-                            text-3xl
+                            text-2xl
+                            sm:text-3xl
                             lg:text-4xl
                             font-black
                             break-words
@@ -763,11 +755,18 @@ export default function Dashboard({ user: propUser }) {
                 className="
                   xl:col-span-2
                   overflow-hidden
+                  min-h-[420px]
                   hidden
                   md:block
                 "
               >
-                <RadarChartCard skills={radarSkills} />
+                {Object.keys(radarSkills).length > 0 ? (
+                  <RadarChartCard skills={radarSkills} />
+                ) : (
+                  <div className="flex items-center justify-center h-[320px] text-slate-500">
+                    No competency data available yet
+                  </div>
+                )}
               </Card>
 
               {/* PENDING */}
@@ -823,7 +822,11 @@ export default function Dashboard({ user: propUser }) {
                     return (
                       <button
                         key={training.id}
-                        onClick={() => navigate(`/registration/${training.id}`)}
+                        onClick={() =>
+                        navigate("/my-trainings")
+                          
+                          
+                        }                        
                         className={`
                             w-full
                             text-left

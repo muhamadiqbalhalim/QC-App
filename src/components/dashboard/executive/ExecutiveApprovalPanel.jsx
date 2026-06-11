@@ -1,4 +1,4 @@
-import React, {
+import {
   memo,
 } from 'react';
 
@@ -7,7 +7,6 @@ import {
   Clock3,
   Users,
   CheckCircle2,
-  XCircle,
   FileText,
 } from 'lucide-react';
 
@@ -30,8 +29,6 @@ function ExecutiveApprovalPanel({
   submissions = [],
 
   onApprove,
-
-  onReject,
 
 }) {
 
@@ -345,16 +342,13 @@ function ExecutiveApprovalPanel({
                 <div
                   className="
                     flex
-                    flex-col
-                    sm:flex-row
-                    gap-3
                     shrink-0
                     w-full
                     sm:w-auto
                   "
                 >
 
-                  {/* APPROVE */}
+                  {/* REVIEW */}
                   <button
                     onClick={() =>
                       onApprove?.(
@@ -380,51 +374,13 @@ function ExecutiveApprovalPanel({
                       tracking-widest
                       transition-all
                     "
-                  >
+                    >
 
                     <CheckCircle2
                       size={16}
                     />
 
-                    Approve
-
-                  </button>
-
-                  {/* REJECT */}
-                  <button
-                    onClick={() =>
-                      onReject?.(
-                        submission
-                      )
-                    }
-                    className="
-                      w-full
-                      sm:w-auto
-                      flex
-                      items-center
-                      justify-center
-                      gap-2
-                      px-5
-                      py-3
-                      rounded-2xl
-                      border
-                      border-red-500/20
-                      bg-red-500/10
-                      text-red-400
-                      text-sm
-                      font-black
-                      uppercase
-                      tracking-widest
-                      transition-all
-                      hover:bg-red-500/20
-                    "
-                  >
-
-                    <XCircle
-                      size={16}
-                    />
-
-                    Reject
+                    Review
 
                   </button>
 

@@ -1,4 +1,4 @@
-import React, {
+import {
   useEffect,
   useMemo,
   useState,
@@ -714,9 +714,34 @@ export default function TrainingHistory() {
 
                       <button
                         onClick={() =>
-                          exportAuditPdf(
-                            training
-                          )
+                          exportAuditPdf({
+                            currentUser: {
+                              name:
+                                training.employeeName ||
+                                currentUser?.name,
+
+                              employeeId:
+                                training.employeeId ||
+                                currentUser?.employeeId,
+
+                              department:
+                                training.department ||
+                                currentUser?.department,
+                            },
+
+                            trainingConfig,
+
+                            workflowData:
+                              training,
+
+                            formData:
+                              training.formData || {},
+
+                            totalMark:
+                              training.totalMark ||
+                              training.finalScore ||
+                              0,
+                          })
                         }
                         className="
                           w-full

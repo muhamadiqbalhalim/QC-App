@@ -1,93 +1,51 @@
 import jsPDF from 'jspdf';
-
 import autoTable from 'jspdf-autotable';
-
-/**
- * =========================================================
- * EXPORT AUDIT PDF
- * =========================================================
- * Enterprise QC Audit PDF Generator
- * =========================================================
- */
 
 export async function exportAuditPdf({
 
   currentUser,
-
   trainingConfig,
-
   workflowData,
-
   formData,
-
-  totalMark,
+  totalMark = 0,
 
 }) {
 
-  /**
-   * =========================================================
-   * PDF INIT
-   * =========================================================
-   */
-
-  const pdf =
-    new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-
-  /**
-   * =========================================================
-   * COLORS
-   * =========================================================
-   */
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
 
   const COLORS = {
 
-    amber:
-      [245, 158, 11],
-
-    dark:
-      [15, 23, 42],
-
-    gray:
-      [100, 116, 139],
-
-    green:
-      [16, 185, 129],
-
-    red:
-      [239, 68, 68],
+    dark: [15, 23, 42],
+    amber: [245, 158, 11],
+    green: [16, 185, 129],
+    red: [239, 68, 68],
+    gray: [100, 116, 139],
 
   };
-
-  /**
-   * =========================================================
-   * PAGE SETTINGS
-   * =========================================================
-   */
 
   const PAGE_WIDTH =
     pdf.internal.pageSize.getWidth();
 
-  let cursorY = 20;
+  const PAGE_HEIGHT =
+    pdf.internal.pageSize.getHeight();
 
-  /**
-   * =========================================================
-   * HEADER
-   * =========================================================
-   */
+  let cursorY;
 
-  pdf.setFillColor(
-    ...COLORS.dark
-  );
+  /* ===================================================== */
+  /* HEADER */
+  /* ===================================================== */
+
+  pdf.setFillColor(...COLORS.dark);
 
   pdf.rect(
     0,
     0,
     PAGE_WIDTH,
-    35,
+    32,
     'F'
   );
 
@@ -110,27 +68,19 @@ export async function exportAuditPdf({
     18
   );
 
-  pdf.setFontSize(10);
-
-  pdf.setTextColor(
-    220,
-    220,
-    220
-  );
+  pdf.setFontSize(9);
 
   pdf.text(
-    'Enterprise Quality Control System',
+    'Quality Control Training Management System',
     14,
-    26
+    25
   );
 
-  cursorY = 48;
+  cursorY = 42;
 
-  /**
-   * =========================================================
-   * TRAINING TITLE
-   * =========================================================
-   */
+  /* ===================================================== */
+  /* TRAINING INFO */
+  /* ===================================================== */
 
   pdf.setTextColor(
     ...COLORS.dark
@@ -138,74 +88,66 @@ export async function exportAuditPdf({
 
   pdf.setFontSize(18);
 
-  pdf.setFont(
-    'helvetica',
-    'bold'
-  );
-
   pdf.text(
-    trainingConfig.title,
+    trainingConfig?.title ||
+      'Training Audit',
     14,
     cursorY
   );
 
   cursorY += 10;
 
-  /**
-   * =========================================================
-   * SUMMARY TABLE
-   * =========================================================
-   */
-
   autoTable(pdf, {
 
-    startY:
-      cursorY,
+    startY: cursorY,
 
-    theme:
-      'grid',
+    theme: 'grid',
 
     styles: {
-
-      fontSize: 10,
-
-      cellPadding: 4,
-
+      fontSize: 9,
+      cellPadding: 3,
     },
 
     headStyles: {
-
-      fillColor:
-        COLORS.amber,
-
-      textColor:
-        [0, 0, 0],
-
-      fontStyle:
-        'bold',
-
+      fillColor: COLORS.amber,
+      textColor: [0, 0, 0],
+      fontStyle: 'bold',
     },
 
     body: [
 
       [
         'Employee Name',
-        currentUser?.name || 'N/A',
+        currentUser?.name ||
+          workflowData?.employeeName ||
+          'N/A',
       ],
 
       [
         'Employee ID',
-        currentUser?.employeeId || 'N/A',
+        currentUser?.employeeId ||
+          workflowData?.employeeId ||
+          'N/A',
       ],
 
       [
         'Department',
-        currentUser?.department || 'N/A',
+        currentUser?.department ||
+          workflowData?.department ||
+          'N/A',
       ],
 
       [
         'Training Code',
-        trainingConfig?.code || 'N/A',
+        trainingConfig?.code ||
+          workflowData?.trainingId ||
+          '-',
+      ],
+
+      [
+        'Training Name',
+        trainingConfig?.title ||
+          '-',
       ],
 
       [
@@ -215,22 +157,21 @@ export async function exportAuditPdf({
 
       [
         'Result Status',
-        workflowData?.resultStatus || 'N/A',
+        workflowData?.resultStatus ||
+          '-',
       ],
 
       [
         'Workflow Status',
-        workflowData?.lifecycleStatus || 'N/A',
+        workflowData?.lifecycleStatus ||
+          '-',
       ],
 
       [
-        'Executive ID',
-        workflowData?.approvedBy || 'N/A',
-      ],
-
-      [
-        'Completed At',
-        workflowData?.completedAt || 'N/A',
+        'Inspection Date',
+        workflowData?.completedAt ||
+          workflowData?.updatedAt ||
+          '-',
       ],
 
     ],
@@ -238,13 +179,16 @@ export async function exportAuditPdf({
   });
 
   cursorY =
-    pdf.lastAutoTable.finalY + 14;
+    pdf.lastAutoTable.finalY +
+    12;
 
-  /**
-   * =========================================================
-   * SECTION TITLE
-   * =========================================================
-   */
+  /* ===================================================== */
+  /* EXECUTIVE ASSESSMENT */
+  /* ===================================================== */
+
+  const executiveAssessment =
+    workflowData?.executiveAssessment ||
+    {};
 
   pdf.setFontSize(14);
 
@@ -254,95 +198,146 @@ export async function exportAuditPdf({
   );
 
   pdf.text(
+    'Executive Assessment',
+    14,
+    cursorY
+  );
+
+  cursorY += 6;
+
+  autoTable(pdf, {
+
+    startY: cursorY,
+
+    theme: 'grid',
+
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+
+    headStyles: {
+      fillColor: COLORS.dark,
+      textColor: [255,255,255],
+    },
+
+    body: [
+
+      [
+        'Pre-Test',
+        executiveAssessment.preTest ??
+          '-',
+      ],
+
+      [
+        'Post-Test',
+        executiveAssessment.postTest ??
+          '-',
+      ],
+
+      [
+        'Executive Remark',
+        executiveAssessment.remark ??
+          '-',
+      ],
+
+    ],
+
+  });
+
+  cursorY =
+    pdf.lastAutoTable.finalY +
+    12;
+
+  /* ===================================================== */
+  /* INSPECTION RESULTS */
+  /* ===================================================== */
+
+  pdf.setFontSize(14);
+
+  pdf.text(
     'Inspection Results',
     14,
     cursorY
   );
 
-  cursorY += 8;
-
-  /**
-   * =========================================================
-   * BUILD INSPECTION TABLE
-   * =========================================================
-   */
+  cursorY += 5;
 
   const inspectionRows = [];
 
   Object.entries(
     formData?.inspection || {}
   ).forEach(
-    ([
-      sectionId,
-      rows,
-    ]) => {
+
+    ([sectionId, rows]) => {
 
       Object.entries(
         rows || {}
       ).forEach(
-        ([
-          rowId,
-          fields,
-        ]) => {
 
-          Object.entries(
-            fields || {}
-          ).forEach(
-            ([
-              fieldId,
-              value,
-            ]) => {
+        ([rowId, fields]) => {
 
-              inspectionRows.push([
+          const insp =
+            fields?.insp ?? '-';
 
-                sectionId,
+          const keyPt =
+            fields?.keyPt ?? '-';
 
-                rowId,
+          const seq =
+            fields?.seq ?? '-';
 
-                fieldId,
+          const completed =
+            insp !== '-' &&
+            keyPt !== '-' &&
+            seq !== '-';
 
-                String(value),
+          inspectionRows.push([
 
-              ]);
+            sectionId,
 
-            }
-          );
+            rowId,
+
+            String(insp),
+
+            String(keyPt),
+
+            String(seq),
+
+            completed
+              ? 'COMPLETE'
+              : 'INCOMPLETE',
+
+          ]);
 
         }
+
       );
 
     }
-  );
 
-  /**
-   * =========================================================
-   * INSPECTION TABLE
-   * =========================================================
-   */
+  );
 
   autoTable(pdf, {
 
-    startY:
-      cursorY,
+    startY: cursorY,
 
     head: [[
+
       'Section',
-      'Row',
-      'Field',
-      'Result',
+      'Inspection ID',
+      'Insp Res',
+      'KeyPt Res',
+      'Seq Res',
+      'Status',
+
     ]],
 
-    body:
-      inspectionRows,
-
-    theme:
-      'striped',
+    body: inspectionRows,
 
     styles: {
 
       fontSize: 8,
-
-      cellPadding: 3,
+      cellPadding: 2,
 
     },
 
@@ -352,20 +347,32 @@ export async function exportAuditPdf({
         COLORS.dark,
 
       textColor:
-        [255, 255, 255],
+        [255,255,255],
 
     },
+
+    theme: 'striped',
 
   });
 
   cursorY =
-    pdf.lastAutoTable.finalY + 18;
+    pdf.lastAutoTable.finalY +
+    12;
 
-  /**
-   * =========================================================
-   * APPROVAL STATUS
-   * =========================================================
-   */
+  /* ===================================================== */
+  /* APPROVAL INFO */
+  /* ===================================================== */
+
+  if (
+    cursorY >
+    PAGE_HEIGHT - 60
+  ) {
+
+    pdf.addPage();
+
+    cursorY = 20;
+
+  }
 
   pdf.setFontSize(14);
 
@@ -375,101 +382,75 @@ export async function exportAuditPdf({
   );
 
   pdf.text(
-    'Approval Workflow',
+    'Approval Information',
     14,
     cursorY
   );
 
-  cursorY += 10;
+  cursorY += 6;
 
-  /**
-   * =========================================================
-   * STATUS BOX
-   * =========================================================
-   */
+  autoTable(pdf, {
 
-  const status =
-    workflowData?.lifecycleStatus;
+    startY: cursorY,
 
-  let statusColor =
-    COLORS.gray;
+    theme: 'grid',
 
-  if (
-    status === 'APPROVED'
-  ) {
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
 
-    statusColor =
-      COLORS.green;
+    headStyles: {
+      fillColor: COLORS.amber,
+      textColor: [0,0,0],
+    },
 
-  }
+    body: [
 
-  if (
-    status === 'REJECTED'
-  ) {
+      [
+        'Executive ID',
+        workflowData?.approvedBy ||
+          '-',
+      ],
 
-    statusColor =
-      COLORS.red;
+      [
+        'Approved Date',
+        workflowData?.approvedAt ||
+          '-',
+      ],
 
-  }
+      [
+        'Rejected Date',
+        workflowData?.rejectedAt ||
+          '-',
+      ],
 
-  if (
-    status === 'SUBMITTED'
-  ) {
+      [
+        'Status',
+        workflowData?.lifecycleStatus ||
+          '-',
+      ],
 
-    statusColor =
-      COLORS.amber;
+    ],
 
-  }
+  });
 
-  pdf.setFillColor(
-    ...statusColor
-  );
+  cursorY =
+    pdf.lastAutoTable.finalY +
+    25;
 
-  pdf.roundedRect(
-    14,
-    cursorY,
-    80,
-    12,
-    3,
-    3,
-    'F'
-  );
-
-  pdf.setTextColor(
-    255,
-    255,
-    255
-  );
+  /* ===================================================== */
+  /* SIGNATURE */
+  /* ===================================================== */
 
   pdf.setFontSize(11);
-
-  pdf.text(
-    status || 'UNKNOWN',
-    20,
-    cursorY + 8
-  );
-
-  cursorY += 28;
-
-  /**
-   * =========================================================
-   * SIGNATURE AREA
-   * =========================================================
-   */
 
   pdf.setTextColor(
     ...COLORS.dark
   );
 
-  pdf.setFontSize(12);
-
-  pdf.setFont(
-    'helvetica',
-    'bold'
-  );
-
   pdf.text(
-    'Employee Signature',
+    'Operator Signature',
     14,
     cursorY
   );
@@ -480,7 +461,7 @@ export async function exportAuditPdf({
     cursorY
   );
 
-  cursorY += 20;
+  cursorY += 18;
 
   pdf.line(
     14,
@@ -496,14 +477,9 @@ export async function exportAuditPdf({
     cursorY
   );
 
-  /**
-   * =========================================================
-   * FOOTER
-   * =========================================================
-   */
-
-  const pageHeight =
-    pdf.internal.pageSize.getHeight();
+  /* ===================================================== */
+  /* FOOTER */
+  /* ===================================================== */
 
   pdf.setFontSize(8);
 
@@ -516,26 +492,25 @@ export async function exportAuditPdf({
   pdf.text(
     'Generated by QC Training System',
     14,
-    pageHeight - 10
+    PAGE_HEIGHT - 10
   );
 
   pdf.text(
     new Date().toLocaleString(),
-    PAGE_WIDTH - 50,
-    pageHeight - 10
+    PAGE_WIDTH - 55,
+    PAGE_HEIGHT - 10
   );
 
-  /**
-   * =========================================================
-   * SAVE PDF
-   * =========================================================
-   */
+  /* ===================================================== */
+  /* SAVE */
+  /* ===================================================== */
 
-  const fileName =
-    `${trainingConfig.code}_${currentUser.employeeId}.pdf`;
+  const fileName = `${trainingConfig?.code || 'AUDIT'}_${
+    workflowData?.employeeId ||
+    currentUser?.employeeId ||
+    'USER'
+  }.pdf`;
 
-  pdf.save(
-    fileName
-  );
+  pdf.save(fileName);
 
 }

@@ -134,4 +134,32 @@ export const STATUS_COLORS = {
 
 };
 
+export const getTrainingStatusLabel = (
+  status
+) =>
+  STATUS_LABELS[status] ||
+  'Pending';
+
+export const getTrainingStatusVariant = (
+  status
+) => {
+
+  switch (status) {
+
+    case TRAINING_STATUS.APPROVED:
+      return 'success';
+
+    case TRAINING_STATUS.REJECTED:
+      return 'danger';
+
+    case TRAINING_STATUS.IN_PROGRESS:
+      return 'info';
+
+    default:
+      return 'warning';
+
+  }
+
+};
+
 export default TRAINING_STATUS;

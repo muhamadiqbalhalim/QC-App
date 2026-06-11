@@ -8,45 +8,8 @@ import {
 
 import {
   ROLES,
+  detectUserRole,
 } from '../config/constants/roles';
-
-/**
- * =========================================================
- * EXECUTIVE IDS
- * =========================================================
- * Temporary MVP executive whitelist.
- *
- * Later:
- * - move to Firebase
- * - admin management
- * - dynamic permissions
- * =========================================================
- */
-
-export const EXECUTIVE_IDS = [
-  '2500',
-];
-
-/**
- * =========================================================
- * DETECT ROLE
- * =========================================================
- */
-
-export const detectUserRole = (
-  employeeId
-) => {
-
-  const normalizedId =
-    String(employeeId).trim();
-
-  return EXECUTIVE_IDS.includes(
-    normalizedId
-  )
-    ? ROLES.EXECUTIVE
-    : ROLES.OPERATOR;
-
-};
 
 export default function useSession() {
 
