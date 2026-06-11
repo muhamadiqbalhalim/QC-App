@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 import {
   LayoutDashboard,
@@ -18,43 +18,17 @@ import { ROLE_LABELS, isExecutive } from "../../config/constants/roles";
 
 import { Button, Badge } from "../ui";
 
-export default function Sidebar() {
-  /**
-   * =========================================================
-   * HOOKS
-   * =========================================================
-   */
-
-  const navigate = useNavigate();
+export default function Sidebar({
+  onLogout,
+}) {
 
   const location = useLocation();
-
-  const { getSession, clearSession } = useSession();
-
-  /**
-   * =========================================================
-   * STATES
-   * =========================================================
-   */
-
-  /**
-   * =========================================================
-   * USER
-   * =========================================================
-   */
-
+  const { getSession } = useSession();
   const currentUser = useMemo(() => {
     return getSession();
   }, [getSession]);
 
   const executiveMode = isExecutive(currentUser?.role);
-
-  /**
-   * =========================================================
-   * STYLES
-   * =========================================================
-   */
-
   const styles = {
     sidebar: `
       bg-white
@@ -134,17 +108,6 @@ export default function Sidebar() {
     return location.pathname === path;
   };
 
-  /**
-   * =========================================================
-   * LOGOUT
-   * =========================================================
-   */
-
-  const handleLogout = () => {
-    clearSession();
-
-    navigate("/");
-  };
 
   /**
    * =========================================================
@@ -352,7 +315,7 @@ export default function Sidebar() {
           size="lg"
           fullWidth
           icon={LogOut}
-          onClick={handleLogout}
+          onClick={onLogout}
         >
           Logout
         </Button>

@@ -42,14 +42,20 @@ export default function AppLayout({
    * LOGOUT
    * =========================================================
    */
+    const handleLogout = () => {
 
-  const handleLogout = () => {
+      console.log("Logout clicked");
 
-    clearSession();
+      clearSession();
 
-    window.location.href = '/';
+      console.log(
+        "Session after logout:",
+        localStorage.getItem("session")
+      );
 
-  };
+      window.location.href = "/";
+
+    };
 
   /**
    * =========================================================
